@@ -7,6 +7,7 @@ Microservice responsible for managing school activities and events.
 - Activity creation, editing, and deletion
 - Activity scheduling
 - Enrollment management
+- Affecting the right teacher to the activity
 - Activity information retrieval
 
 ## API Endpoints (To Be Implemented)
@@ -18,6 +19,7 @@ Microservice responsible for managing school activities and events.
 - `POST /api/activities/:id/enroll` - Enroll student in activity
 - `DELETE /api/activities/:id/enroll/:studentId` - Unenroll student from activity
 - `GET /api/activities/:id/participants` - Get activity participants
+- TODO: Add an API to affect the teacher of the activity
 
 ## Technology Stack (To Be Decided)
 - Backend framework: TBD (e.g., Node.js/Express, Python/Flask, Java/Spring Boot)
