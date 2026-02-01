@@ -14,4 +14,3 @@ module.exports = {
     '^../../../shared/utils/auth$': '<rootDir>/../../shared/utils/__mocks__/auth.js'
   }
 };
-
