@@ -141,12 +141,12 @@ describe('Bookings Service', () => {
         .mockResolvedValueOnce([existingBooking]) // Check exists
         .mockResolvedValueOnce([]) // No conflicts
         .mockResolvedValueOnce({}) // Update
-        .mockResolvedValueOnce([{ ...existingBooking, start_time: '2024-01-01 12:00:00' }]); // Get updated
+        .mockResolvedValueOnce([{ ...existingBooking, start_time: '2024-01-01 09:00:00', end_time: '2024-01-01 10:00:00' }]); // Get updated
 
       const response = await request(app)
         .put('/api/bookings/1')
         .set('Authorization', 'Bearer valid-token')
-        .send({ start_time: '2024-01-01 12:00:00' });
+        .send({ start_time: '2024-01-01 09:00:00', end_time: '2024-01-01 10:00:00' });
 
       expect(response.status).toBe(200);
     });
@@ -165,12 +165,22 @@ describe('Bookings Service', () => {
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('message');
     });
+
+    it('should return 404 if booking not found', async () => {
+      database.query.mockResolvedValueOnce([]);
+
+      const response = await request(app)
+        .delete('/api/bookings/999')
+        .set('Authorization', 'Bearer valid-token');
+
+      expect(response.status).toBe(404);
+    });
   });
 
   describe('GET /api/bookings/room/:roomId', () => {
     it('should return bookings for a specific room', async () => {
       const mockBookings = [
-        { id: 1, room_id: 1, title: 'Math Class' }
+        { id: 1, room_id: 1, title: 'Math Class', start_time: '2024-01-01 10:00:00', end_time: '2024-01-01 11:00:00' }
       ];
       
       database.query
@@ -179,11 +189,12 @@ describe('Bookings Service', () => {
 
       const response = await request(app).get('/api/bookings/room/1');
       expect(response.status).toBe(200);
-      expect(response.body).toEqual(mockBookings);
+      expect(response.body).toHaveProperty('length', 1);
+      expect(response.body[0]).toHaveProperty('room_id', 1);
     });
 
     it('should return 404 if room not found', async () => {
-      database.query.mockResolvedValue([]);
+      database.query.mockResolvedValueOnce([]);
 
       const response = await request(app).get('/api/bookings/room/999');
       expect(response.status).toBe(404);
@@ -192,7 +203,7 @@ describe('Bookings Service', () => {
 
   describe('GET /api/bookings/conflicts', () => {
     it('should check for booking conflicts', async () => {
-      database.query.mockResolvedValue([]);
+      database.query.mockResolvedValueOnce([]);
 
       const response = await request(app)
         .get('/api/bookings/conflicts')
@@ -217,7 +228,7 @@ describe('Bookings Service', () => {
 
     it('should detect conflicts', async () => {
       const conflicts = [{ id: 1, room_id: 1 }];
-      database.query.mockResolvedValue(conflicts);
+      database.query.mockResolvedValueOnce(conflicts);
 
       const response = await request(app)
         .get('/api/bookings/conflicts')

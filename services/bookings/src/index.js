@@ -34,6 +34,69 @@ app.get('/api/bookings', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
+// Get booking conflicts (MUST be before /:id route)
+app.get('/api/bookings/conflicts', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const { room_id, start_time, end_time, exclude_id } = req.query;
+
+    if (!room_id || !start_time || !end_time) {
+      return res.status(400).json({ error: 'Room ID, start time, and end time are required' });
+    }
+
+    let query = `SELECT * FROM bookings 
+                 WHERE room_id = ? 
+                 AND status != 'cancelled'
+                 AND (
+                   (start_time <= ? AND end_time > ?) OR
+                   (start_time < ? AND end_time >= ?) OR
+                   (start_time >= ? AND end_time <= ?)
+                 )`;
+    
+    const params = [room_id, start_time, start_time, end_time, end_time, start_time, end_time];
+
+    if (exclude_id) {
+      query += ' AND id != ?';
+      params.push(exclude_id);
+    }
+
+    const conflicts = await database.query(query, params);
+    
+    logger.info(`Found ${conflicts.length} conflicts`);
+    res.json({
+      has_conflicts: conflicts.length > 0,
+      count: conflicts.length,
+      conflicts: conflicts
+    });
+  } catch (error) {
+    logger.error('Failed to check conflicts', { error: error.message });
+    res.status(500).json({ error: 'Failed to check conflicts' });
+  }
+});
+
+// Get bookings by room (MUST be before /:id route)
+app.get('/api/bookings/room/:roomId', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    
+    // Check if room exists
+    const rooms = await database.query('SELECT * FROM rooms WHERE id = ?', [roomId]);
+    if (rooms.length === 0) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+
+    const bookings = await database.query(
+      'SELECT * FROM bookings WHERE room_id = ? ORDER BY start_time DESC',
+      [roomId]
+    );
+    
+    logger.info(`Retrieved ${bookings.length} bookings for room ${roomId}`);
+    res.json(bookings);
+  } catch (error) {
+    logger.error('Failed to get room bookings', { error: error.message });
+    res.status(500).json({ error: 'Failed to retrieve bookings' });
+  }
+});
+
 // Get booking by ID
 app.get('/api/bookings/:id', optionalAuthMiddleware, async (req, res) => {
   try {
@@ -201,69 +264,6 @@ app.delete('/api/bookings/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// Get bookings by room
-app.get('/api/bookings/room/:roomId', optionalAuthMiddleware, async (req, res) => {
-  try {
-    const { roomId } = req.params;
-    
-    // Check if room exists
-    const rooms = await database.query('SELECT * FROM rooms WHERE id = ?', [roomId]);
-    if (rooms.length === 0) {
-      return res.status(404).json({ error: 'Room not found' });
-    }
-
-    const bookings = await database.query(
-      'SELECT * FROM bookings WHERE room_id = ? ORDER BY start_time DESC',
-      [roomId]
-    );
-    
-    logger.info(`Retrieved ${bookings.length} bookings for room ${roomId}`);
-    res.json(bookings);
-  } catch (error) {
-    logger.error('Failed to get room bookings', { error: error.message });
-    res.status(500).json({ error: 'Failed to retrieve bookings' });
-  }
-});
-
-// Get booking conflicts
-app.get('/api/bookings/conflicts', optionalAuthMiddleware, async (req, res) => {
-  try {
-    const { room_id, start_time, end_time, exclude_id } = req.query;
-
-    if (!room_id || !start_time || !end_time) {
-      return res.status(400).json({ error: 'Room ID, start time, and end time are required' });
-    }
-
-    let query = `SELECT * FROM bookings 
-                 WHERE room_id = ? 
-                 AND status != 'cancelled'
-                 AND (
-                   (start_time <= ? AND end_time > ?) OR
-                   (start_time < ? AND end_time >= ?) OR
-                   (start_time >= ? AND end_time <= ?)
-                 )`;
-    
-    const params = [room_id, start_time, start_time, end_time, end_time, start_time, end_time];
-
-    if (exclude_id) {
-      query += ' AND id != ?';
-      params.push(exclude_id);
-    }
-
-    const conflicts = await database.query(query, params);
-    
-    logger.info(`Found ${conflicts.length} conflicts`);
-    res.json({
-      has_conflicts: conflicts.length > 0,
-      count: conflicts.length,
-      conflicts: conflicts
-    });
-  } catch (error) {
-    logger.error('Failed to check conflicts', { error: error.message });
-    res.status(500).json({ error: 'Failed to check conflicts' });
-  }
-});
-
 // Initialize database and start server
 async function startServer() {
   try {
@@ -292,6 +292,9 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-startServer();
+// Only start server if not in test mode
+if (process.env.NODE_ENV !== 'test') {
+  startServer();
+}
 
 module.exports = app;

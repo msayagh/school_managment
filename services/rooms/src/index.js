@@ -34,6 +34,60 @@ app.get('/api/rooms', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
+// Get available rooms (MUST be before /:id routes to avoid matching "available" as an ID)
+app.get('/api/rooms/available', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const { start_time, end_time, capacity, room_type } = req.query;
+
+    // Build query
+    let query = 'SELECT * FROM rooms WHERE status = "available"';
+    const params = [];
+
+    if (capacity) {
+      query += ' AND capacity >= ?';
+      params.push(capacity);
+    }
+
+    if (room_type) {
+      query += ' AND room_type = ?';
+      params.push(room_type);
+    }
+
+    let rooms = await database.query(query, params);
+
+    // If time range specified, filter out rooms with conflicts
+    if (start_time && end_time) {
+      const availableRooms = [];
+      
+      for (const room of rooms) {
+        const conflicts = await database.query(
+          `SELECT COUNT(*) as count FROM bookings 
+           WHERE room_id = ? 
+           AND status != 'cancelled'
+           AND (
+             (start_time <= ? AND end_time > ?) OR
+             (start_time < ? AND end_time >= ?) OR
+             (start_time >= ? AND end_time <= ?)
+           )`,
+          [room.id, start_time, start_time, end_time, end_time, start_time, end_time]
+        );
+
+        if (conflicts[0].count === 0) {
+          availableRooms.push(room);
+        }
+      }
+      
+      rooms = availableRooms;
+    }
+
+    logger.info(`Retrieved ${rooms.length} available rooms`);
+    res.json(rooms);
+  } catch (error) {
+    logger.error('Failed to get available rooms', { error: error.message });
+    res.status(500).json({ error: 'Failed to retrieve available rooms' });
+  }
+});
+
 // Get room by ID
 app.get('/api/rooms/:id', optionalAuthMiddleware, async (req, res) => {
   try {
@@ -49,6 +103,60 @@ app.get('/api/rooms/:id', optionalAuthMiddleware, async (req, res) => {
   } catch (error) {
     logger.error('Failed to get room', { error: error.message });
     res.status(500).json({ error: 'Failed to retrieve room' });
+  }
+});
+
+// Get room availability
+app.get('/api/rooms/:id/availability', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { start_time, end_time } = req.query;
+    
+    // Check if room exists
+    const rooms = await database.query('SELECT * FROM rooms WHERE id = ?', [id]);
+    if (rooms.length === 0) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+
+    const room = rooms[0];
+
+    // If no time range specified, return room status
+    if (!start_time || !end_time) {
+      return res.json({
+        room_id: room.id,
+        name: room.name,
+        status: room.status,
+        available: room.status === 'available'
+      });
+    }
+
+    // Check for conflicting bookings in the time range
+    const conflicts = await database.query(
+      `SELECT * FROM bookings 
+       WHERE room_id = ? 
+       AND status != 'cancelled'
+       AND (
+         (start_time <= ? AND end_time > ?) OR
+         (start_time < ? AND end_time >= ?) OR
+         (start_time >= ? AND end_time <= ?)
+       )`,
+      [id, start_time, start_time, end_time, end_time, start_time, end_time]
+    );
+
+    const available = room.status === 'available' && conflicts.length === 0;
+
+    logger.info(`Checked availability for room ${id}`);
+    res.json({
+      room_id: room.id,
+      name: room.name,
+      status: room.status,
+      available,
+      conflicts: conflicts.length,
+      bookings: conflicts
+    });
+  } catch (error) {
+    logger.error('Failed to check room availability', { error: error.message });
+    res.status(500).json({ error: 'Failed to check availability' });
   }
 });
 
@@ -137,114 +245,6 @@ app.delete('/api/rooms/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// Get room availability
-app.get('/api/rooms/:id/availability', optionalAuthMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { start_time, end_time } = req.query;
-    
-    // Check if room exists
-    const rooms = await database.query('SELECT * FROM rooms WHERE id = ?', [id]);
-    if (rooms.length === 0) {
-      return res.status(404).json({ error: 'Room not found' });
-    }
-
-    const room = rooms[0];
-
-    // If no time range specified, return room status
-    if (!start_time || !end_time) {
-      return res.json({
-        room_id: room.id,
-        name: room.name,
-        status: room.status,
-        available: room.status === 'available'
-      });
-    }
-
-    // Check for conflicting bookings in the time range
-    const conflicts = await database.query(
-      `SELECT * FROM bookings 
-       WHERE room_id = ? 
-       AND status != 'cancelled'
-       AND (
-         (start_time <= ? AND end_time > ?) OR
-         (start_time < ? AND end_time >= ?) OR
-         (start_time >= ? AND end_time <= ?)
-       )`,
-      [id, start_time, start_time, end_time, end_time, start_time, end_time]
-    );
-
-    const available = room.status === 'available' && conflicts.length === 0;
-
-    logger.info(`Checked availability for room ${id}`);
-    res.json({
-      room_id: room.id,
-      name: room.name,
-      status: room.status,
-      available,
-      conflicts: conflicts.length,
-      bookings: conflicts
-    });
-  } catch (error) {
-    logger.error('Failed to check room availability', { error: error.message });
-    res.status(500).json({ error: 'Failed to check availability' });
-  }
-});
-
-// Get available rooms
-app.get('/api/rooms/available', optionalAuthMiddleware, async (req, res) => {
-  try {
-    const { start_time, end_time, capacity, room_type } = req.query;
-
-    // Build query
-    let query = 'SELECT * FROM rooms WHERE status = "available"';
-    const params = [];
-
-    if (capacity) {
-      query += ' AND capacity >= ?';
-      params.push(capacity);
-    }
-
-    if (room_type) {
-      query += ' AND room_type = ?';
-      params.push(room_type);
-    }
-
-    let rooms = await database.query(query, params);
-
-    // If time range specified, filter out rooms with conflicts
-    if (start_time && end_time) {
-      const availableRooms = [];
-      
-      for (const room of rooms) {
-        const conflicts = await database.query(
-          `SELECT COUNT(*) as count FROM bookings 
-           WHERE room_id = ? 
-           AND status != 'cancelled'
-           AND (
-             (start_time <= ? AND end_time > ?) OR
-             (start_time < ? AND end_time >= ?) OR
-             (start_time >= ? AND end_time <= ?)
-           )`,
-          [room.id, start_time, start_time, end_time, end_time, start_time, end_time]
-        );
-
-        if (conflicts[0].count === 0) {
-          availableRooms.push(room);
-        }
-      }
-      
-      rooms = availableRooms;
-    }
-
-    logger.info(`Retrieved ${rooms.length} available rooms`);
-    res.json(rooms);
-  } catch (error) {
-    logger.error('Failed to get available rooms', { error: error.message });
-    res.status(500).json({ error: 'Failed to retrieve available rooms' });
-  }
-});
-
 // Initialize database and start server
 async function startServer() {
   try {
@@ -273,6 +273,9 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-startServer();
+// Only start server if not in test mode
+if (process.env.NODE_ENV !== 'test') {
+  startServer();
+}
 
 module.exports = app;
