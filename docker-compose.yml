@@ -4,23 +4,24 @@ version: '3.8'
 # This file orchestrates all microservices
 
 services:
-  # Database Service - PostgreSQL
+  # Database Service - MySQL
   database:
-    image: postgres:15-alpine
+    image: mysql:8.0
     container_name: school-database
     environment:
-      POSTGRES_USER: school_admin
-      POSTGRES_PASSWORD: changeme
-      POSTGRES_DB: school_management
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: school_management
+      MYSQL_USER: school_admin
+      MYSQL_PASSWORD: changeme
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
       - ./services/database/init:/docker-entrypoint-initdb.d
     networks:
       - school-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U school_admin"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -59,8 +60,13 @@ services:
       - "3001:3001"
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://school_admin:changeme@database:5432/school_management
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_USER=school_admin
+      - DB_PASSWORD=changeme
+      - DB_NAME=school_management
       - SERVICE_PORT=3001
+      - JWT_SECRET=your-secret-key-change-in-production
     depends_on:
       database:
         condition: service_healthy
@@ -77,8 +83,13 @@ services:
       - "3002:3002"
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://school_admin:changeme@database:5432/school_management
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_USER=school_admin
+      - DB_PASSWORD=changeme
+      - DB_NAME=school_management
       - SERVICE_PORT=3002
+      - JWT_SECRET=your-secret-key-change-in-production
     depends_on:
       database:
         condition: service_healthy
@@ -95,8 +106,13 @@ services:
       - "3003:3003"
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://school_admin:changeme@database:5432/school_management
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_USER=school_admin
+      - DB_PASSWORD=changeme
+      - DB_NAME=school_management
       - SERVICE_PORT=3003
+      - JWT_SECRET=your-secret-key-change-in-production
     depends_on:
       database:
         condition: service_healthy
@@ -113,8 +129,13 @@ services:
       - "3004:3004"
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://school_admin:changeme@database:5432/school_management
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_USER=school_admin
+      - DB_PASSWORD=changeme
+      - DB_NAME=school_management
       - SERVICE_PORT=3004
+      - JWT_SECRET=your-secret-key-change-in-production
     depends_on:
       database:
         condition: service_healthy
@@ -131,8 +152,13 @@ services:
       - "3005:3005"
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://school_admin:changeme@database:5432/school_management
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_USER=school_admin
+      - DB_PASSWORD=changeme
+      - DB_NAME=school_management
       - SERVICE_PORT=3005
+      - JWT_SECRET=your-secret-key-change-in-production
     depends_on:
       database:
         condition: service_healthy
@@ -160,4 +186,4 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
+  mysql_data:
