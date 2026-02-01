@@ -5,7 +5,8 @@ jest.mock('../../../shared/utils/database');
 jest.mock('../../../shared/utils/logger');
 
 const database = require('../../../shared/utils/database');
-const { generateToken } = require('../../../shared/utils/auth');
+const auth = require('../../../shared/utils/auth');
+const { generateToken, hashPassword } = auth;
 const app = require('../src/index');
 
 describe('API Gateway', () => {
@@ -66,20 +67,19 @@ describe('API Gateway', () => {
 
   describe('POST /api/auth/login', () => {
     it('should login with valid credentials', async () => {
+      // Generate a real password hash for 'password123'
+      const passwordHash = await hashPassword('password123');
+      
       const mockUser = {
         id: 1,
         username: 'testuser',
         email: 'test@example.com',
-        password_hash: '$2a$10$X5rB.WC7kzgXQPPqZG9mE.HvH3x7z8z8z8z8z8z8z8z8z8z8z8z8z',
+        password_hash: passwordHash,
         role: 'student',
         status: 'active'
       };
 
       database.query.mockResolvedValue([mockUser]);
-
-      // Mock bcrypt.compare to return true
-      const bcrypt = require('bcryptjs');
-      bcrypt.compare = jest.fn().mockResolvedValue(true);
 
       const response = await request(app)
         .post('/api/auth/login')
