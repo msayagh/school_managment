@@ -1,5 +1,7 @@
 -- School Management System Database Schema
--- MySQL Database Initialization Script
+-- MySQL 8.0+ Database Initialization Script
+-- Note: This schema uses MySQL 8.0+ specific features like DEFAULT (CURRENT_DATE)
+-- Requires MySQL 8.0 or higher
 
 -- Students Table
 CREATE TABLE IF NOT EXISTS students (

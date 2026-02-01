@@ -9,10 +9,10 @@ services:
     image: mysql:8.0
     container_name: school-database
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
       MYSQL_DATABASE: school_management
       MYSQL_USER: school_admin
-      MYSQL_PASSWORD: changeme
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-changeme}
     ports:
       - "3306:3306"
     volumes:
@@ -66,7 +66,7 @@ services:
       - DB_PASSWORD=changeme
       - DB_NAME=school_management
       - SERVICE_PORT=3001
-      - JWT_SECRET=your-secret-key-change-in-production
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-insecure}
     depends_on:
       database:
         condition: service_healthy
@@ -89,7 +89,7 @@ services:
       - DB_PASSWORD=changeme
       - DB_NAME=school_management
       - SERVICE_PORT=3002
-      - JWT_SECRET=your-secret-key-change-in-production
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-insecure}
     depends_on:
       database:
         condition: service_healthy
@@ -112,7 +112,7 @@ services:
       - DB_PASSWORD=changeme
       - DB_NAME=school_management
       - SERVICE_PORT=3003
-      - JWT_SECRET=your-secret-key-change-in-production
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-insecure}
     depends_on:
       database:
         condition: service_healthy
@@ -135,7 +135,7 @@ services:
       - DB_PASSWORD=changeme
       - DB_NAME=school_management
       - SERVICE_PORT=3004
-      - JWT_SECRET=your-secret-key-change-in-production
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-insecure}
     depends_on:
       database:
         condition: service_healthy
@@ -158,7 +158,7 @@ services:
       - DB_PASSWORD=changeme
       - DB_NAME=school_management
       - SERVICE_PORT=3005
-      - JWT_SECRET=your-secret-key-change-in-production
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-insecure}
     depends_on:
       database:
         condition: service_healthy

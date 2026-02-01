@@ -176,6 +176,12 @@ app.use((req, res) => {
 // Initialize database and start server
 async function startServer() {
   try {
+    // Skip server startup in test environment
+    if (process.env.NODE_ENV === 'test') {
+      logger.info('Skipping server startup in test environment');
+      return;
+    }
+
     await database.initializePool();
     logger.info('Database connection pool initialized');
     

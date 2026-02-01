@@ -5,8 +5,18 @@ const log4js = require('log4js');
 const logger = log4js.getLogger('auth');
 logger.level = process.env.LOG_LEVEL || 'info';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRY = process.env.JWT_EXPIRY || '24h';
+
+// Validate JWT secret is provided
+if (!JWT_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET environment variable is required in production');
+  }
+  logger.warn('JWT_SECRET not provided, using insecure default for development');
+}
+
+const EFFECTIVE_JWT_SECRET = JWT_SECRET || 'dev-secret-insecure-do-not-use-in-production';
 
 /**
  * Generate JWT token
@@ -14,7 +24,7 @@ const JWT_EXPIRY = process.env.JWT_EXPIRY || '24h';
  * @returns {string} JWT token
  */
 function generateToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+  return jwt.sign(payload, EFFECTIVE_JWT_SECRET, { expiresIn: JWT_EXPIRY });
 }
 
 /**
@@ -24,7 +34,7 @@ function generateToken(payload) {
  */
 function verifyToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET);
+    return jwt.verify(token, EFFECTIVE_JWT_SECRET);
   } catch (error) {
     logger.error('Token verification failed', { error: error.message });
     throw new Error('Invalid or expired token');

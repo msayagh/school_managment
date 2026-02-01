@@ -17,7 +17,7 @@ function initializePool() {
 
   const config = {
     host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT) || 3306,
+    port: Number(process.env.DB_PORT) || 3306,
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'school_management',
@@ -25,6 +25,12 @@ function initializePool() {
     connectionLimit: 10,
     queueLimit: 0
   };
+
+  // Validate port is a valid number
+  if (isNaN(config.port) || config.port < 1 || config.port > 65535) {
+    logger.error('Invalid DB_PORT value', { port: process.env.DB_PORT });
+    config.port = 3306;
+  }
 
   logger.info('Initializing database connection pool', {
     host: config.host,
