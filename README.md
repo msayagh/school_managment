@@ -23,7 +23,7 @@ This project follows a **microservices architecture** with the following compone
 - **Activities Service**: Handles activity creation, scheduling, and enrollment
 - **Rooms Service**: Manages school rooms and facilities
 - **Bookings Service**: Handles room bookings and reservations
-- **Database Service**: PostgreSQL database for persistent storage
+- **Database Service**: MySQL database for persistent storage
 
 For detailed architecture documentation, see [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)
 
@@ -55,8 +55,8 @@ school_managment/
 
 ### Prerequisites
 - Docker and Docker Compose
-- Node.js (for local development)
-- PostgreSQL (or use Docker)
+- Node.js 18+ (for local development)
+- MySQL 8.0 (or use Docker)
 - Git
 
 ### Installation
@@ -105,7 +105,7 @@ npm run dev
 | Activities    | 3003 |
 | Rooms         | 3004 |
 | Bookings      | 3005 |
-| Database      | 5432 |
+| Database      | 3306 |
 
 ## User Roles
 
@@ -133,11 +133,12 @@ API documentation will be available at:
 
 ## Technology Stack
 
-### Backend (To Be Implemented)
-- Framework: Node.js/Express, Python/Flask, or Java/Spring Boot
-- Database: PostgreSQL
-- Authentication: JWT
-- API Documentation: Swagger/OpenAPI
+### Backend (Implemented)
+- Framework: Node.js with Express
+- Database: MySQL 8.0
+- Authentication: JWT (JSON Web Tokens)
+- Logging: log4js
+- API Documentation: Swagger/OpenAPI (to be added)
 
 ### Frontend (To Be Implemented)
 - Framework: React, Vue.js, or Angular
@@ -151,32 +152,33 @@ API documentation will be available at:
 
 ## Development Roadmap
 
-### Phase 1: Foundation (Current)
+### Phase 1: Foundation (Completed)
 - [x] Architecture design
 - [x] Project structure setup
 - [x] Documentation
-- [ ] Technology stack selection
+- [x] Technology stack selection (Node.js + MySQL)
 
-### Phase 2: Core Services
-- [ ] Implement Students Service
-- [ ] Implement Teachers Service
-- [ ] Implement Activities Service
-- [ ] Implement Rooms Service
-- [ ] Implement Bookings Service
+### Phase 2: Core Services (Completed)
+- [x] Implement Students Service
+- [x] Implement Teachers Service
+- [x] Implement Activities Service
+- [x] Implement Rooms Service
+- [x] Implement Bookings Service
 
-### Phase 3: Integration
-- [ ] Implement API Gateway
-- [ ] Service communication
-- [ ] Authentication & authorization
+### Phase 3: Integration (Completed)
+- [x] Implement API Gateway
+- [x] Service communication via HTTP proxying
+- [x] Authentication & authorization with JWT
 
 ### Phase 4: Frontend
 - [ ] UI design and implementation
 - [ ] Admin dashboard
 - [ ] User interfaces
 
-### Phase 5: Testing & Deployment
-- [ ] Unit and integration tests
-- [ ] CI/CD pipeline
+### Phase 5: Testing & Deployment (In Progress)
+- [x] Unit tests for all services
+- [x] CI/CD pipeline with GitHub Actions
+- [ ] Integration tests
 - [ ] Production deployment
 
 ## Contributing
