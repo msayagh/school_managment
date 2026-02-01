@@ -1,0 +1,163 @@
+version: '3.8'
+
+# Docker Compose configuration for School Management System
+# This file orchestrates all microservices
+
+services:
+  # Database Service - PostgreSQL
+  database:
+    image: postgres:15-alpine
+    container_name: school-database
+    environment:
+      POSTGRES_USER: school_admin
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: school_management
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./services/database/init:/docker-entrypoint-initdb.d
+    networks:
+      - school-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U school_admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Gateway Service
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: school-api-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=development
+      - STUDENTS_SERVICE_URL=http://students-service:3001
+      - TEACHERS_SERVICE_URL=http://teachers-service:3002
+      - ACTIVITIES_SERVICE_URL=http://activities-service:3003
+      - ROOMS_SERVICE_URL=http://rooms-service:3004
+      - BOOKINGS_SERVICE_URL=http://bookings-service:3005
+    depends_on:
+      - students-service
+      - teachers-service
+      - activities-service
+      - rooms-service
+      - bookings-service
+    networks:
+      - school-network
+
+  # Students Microservice
+  students-service:
+    build:
+      context: ./services/students
+      dockerfile: Dockerfile
+    container_name: school-students-service
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://school_admin:changeme@database:5432/school_management
+      - SERVICE_PORT=3001
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - school-network
+
+  # Teachers Microservice
+  teachers-service:
+    build:
+      context: ./services/teachers
+      dockerfile: Dockerfile
+    container_name: school-teachers-service
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://school_admin:changeme@database:5432/school_management
+      - SERVICE_PORT=3002
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - school-network
+
+  # Activities Microservice
+  activities-service:
+    build:
+      context: ./services/activities
+      dockerfile: Dockerfile
+    container_name: school-activities-service
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://school_admin:changeme@database:5432/school_management
+      - SERVICE_PORT=3003
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - school-network
+
+  # Rooms Microservice
+  rooms-service:
+    build:
+      context: ./services/rooms
+      dockerfile: Dockerfile
+    container_name: school-rooms-service
+    ports:
+      - "3004:3004"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://school_admin:changeme@database:5432/school_management
+      - SERVICE_PORT=3004
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - school-network
+
+  # Bookings Microservice
+  bookings-service:
+    build:
+      context: ./services/bookings
+      dockerfile: Dockerfile
+    container_name: school-bookings-service
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://school_admin:changeme@database:5432/school_management
+      - SERVICE_PORT=3005
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - school-network
+
+  # UI Service
+  ui-service:
+    build:
+      context: ./services/ui
+      dockerfile: Dockerfile
+    container_name: school-ui-service
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:8000
+    depends_on:
+      - api-gateway
+    networks:
+      - school-network
+
+networks:
+  school-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
