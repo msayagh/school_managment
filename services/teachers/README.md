@@ -1,22 +1,21 @@
-# Teachers Service
+# Students Service
 
 ## Overview
-Microservice responsible for managing teacher-related operations.
+Microservice responsible for managing student-related operations.
 
 ## Responsibilities
-- Teacher profile management
-- Teacher assignment to activities
-- Teacher schedule management
-- Teacher information retrieval and updates
+- Student registration and profile management
+- Student enrollment in activities
+- Student information retrieval and updates
+- Student attendance tracking
 
 ## API Endpoints (To Be Implemented)
-- `POST /api/teachers` - Register a new teacher
-- `GET /api/teachers` - Get all teachers
-- `GET /api/teachers/:id` - Get teacher by ID
-- `PUT /api/teachers/:id` - Update teacher information
-- `DELETE /api/teachers/:id` - Remove teacher
-- `GET /api/teachers/:id/activities` - Get teacher's assigned activities
-- `GET /api/teachers/:id/schedule` - Get teacher's schedule
+- `POST /api/students` - Register a new student
+- `GET /api/students` - Get all students
+- `GET /api/students/:id` - Get student by ID
+- `PUT /api/students/:id` - Update student information
+- `DELETE /api/students/:id` - Remove student
+- `GET /api/students/:id/activities` - Get student's enrolled activities
 
 ## Technology Stack (To Be Decided)
 - Backend framework: TBD (e.g., Node.js/Express, Python/Flask, Java/Spring Boot)
