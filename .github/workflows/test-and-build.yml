@@ -10,6 +10,8 @@ jobs:
   test-services:
     name: Test Microservices
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     strategy:
       matrix:
@@ -54,6 +56,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: test-services
     if: github.event_name == 'push'
+    permissions:
+      contents: read
     
     strategy:
       matrix:
@@ -84,6 +88,8 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
     needs: test-services
+    permissions:
+      contents: read
     
     services:
       mysql:
