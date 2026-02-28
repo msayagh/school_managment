@@ -14,6 +14,16 @@ describe('API Gateway', () => {
     jest.clearAllMocks();
   });
 
+  describe('GET /', () => {
+    it('should return API info at root', async () => {
+      const response = await request(app).get('/');
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('name', 'School Management System API');
+      expect(response.body).toHaveProperty('status', 'running');
+      expect(response.body).toHaveProperty('endpoints');
+    });
+  });
+
   describe('GET /health', () => {
     it('should return health status', async () => {
       const response = await request(app).get('/health');

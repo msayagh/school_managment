@@ -18,6 +18,31 @@ app.use(cors());
 app.use(express.json());
 app.use(requestLogger);
 
+// Root endpoint - API info
+app.get('/', (req, res) => {
+  res.json({
+    name: 'School Management System API',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      health: 'GET /health',
+      auth: {
+        register: 'POST /api/auth/register',
+        login: 'POST /api/auth/login',
+        me: 'GET /api/auth/me'
+      },
+      services: {
+        students: '/api/students',
+        teachers: '/api/teachers',
+        activities: '/api/activities',
+        rooms: '/api/rooms',
+        bookings: '/api/bookings'
+      }
+    },
+    ui: 'http://localhost:3000'
+  });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy', service: 'api-gateway' });

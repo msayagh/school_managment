@@ -159,4 +159,24 @@ describe('Teachers Service', () => {
       expect(response.status).toBe(404);
     });
   });
+
+  describe('GET /api/teachers/:id/schedule', () => {
+    it('should return teacher schedule', async () => {
+      database.query
+        .mockResolvedValueOnce([{ id: 1, first_name: 'John', last_name: 'Doe' }]) // Teacher exists
+        .mockResolvedValueOnce([{ id: 1, name: 'Math', schedule: 'Mon/Wed 9-11am' }]); // Activities
+
+      const response = await request(app).get('/api/teachers/1/schedule');
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('teacher_id', 1);
+      expect(response.body).toHaveProperty('schedule');
+    });
+
+    it('should return 404 if teacher not found', async () => {
+      database.query.mockResolvedValue([]);
+
+      const response = await request(app).get('/api/teachers/999/schedule');
+      expect(response.status).toBe(404);
+    });
+  });
 });

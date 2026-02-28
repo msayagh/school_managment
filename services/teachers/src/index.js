@@ -143,6 +143,30 @@ app.delete('/api/teachers/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// Get teacher's schedule
+app.get('/api/teachers/:id/schedule', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if teacher exists
+    const teachers = await database.query('SELECT * FROM teachers WHERE id = ?', [id]);
+    if (teachers.length === 0) {
+      return res.status(404).json({ error: 'Teacher not found' });
+    }
+
+    const activities = await database.query(
+      'SELECT id, name, schedule, start_date, end_date, status FROM activities WHERE teacher_id = ? ORDER BY start_date ASC',
+      [id]
+    );
+
+    logger.info(`Retrieved schedule for teacher ${id}`);
+    res.json({ teacher_id: parseInt(id), schedule: activities });
+  } catch (error) {
+    logger.error('Failed to get teacher schedule', { error: error.message });
+    res.status(500).json({ error: 'Failed to retrieve teacher schedule' });
+  }
+});
+
 // Get teacher's activities
 app.get('/api/teachers/:id/activities', optionalAuthMiddleware, async (req, res) => {
   try {

@@ -10,8 +10,8 @@ Before you begin, ensure you have the following installed:
 - [Git](https://git-scm.com/downloads)
 
 Optional (for local development without Docker):
-- [Node.js](https://nodejs.org/) (version 16 or higher)
-- [PostgreSQL](https://www.postgresql.org/download/) (version 13 or higher)
+- [Node.js](https://nodejs.org/) (version 18 or higher)
+- [MySQL 8.0](https://dev.mysql.com/downloads/) (for local development without Docker)
 
 ## Quick Setup
 
@@ -117,14 +117,14 @@ docker-compose up -d --build
 ### Database Access
 
 ```bash
-# Connect to PostgreSQL
-docker-compose exec database psql -U school_admin -d school_management
+# Connect to MySQL
+docker-compose exec database mysql -u school_admin -p school_management
 
 # Backup database
-docker-compose exec database pg_dump -U school_admin school_management > backup.sql
+docker-compose exec database mysqldump -u school_admin -p school_management > backup.sql
 
 # Restore database
-docker-compose exec -T database psql -U school_admin school_management < backup.sql
+docker-compose exec -T database mysql -u school_admin -p school_management < backup.sql
 ```
 
 ## Development Setup
@@ -242,7 +242,7 @@ docker-compose up -d
 
 - [Docker Documentation](https://docs.docker.com/)
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [MySQL Documentation](https://dev.mysql.com/doc/)
 - [REST API Best Practices](https://restfulapi.net/)
 - [Microservices Architecture](https://microservices.io/)
 

@@ -133,9 +133,10 @@ npm run dev
 
 ## API Documentation
 
-API documentation will be available at:
+API endpoint information is available at:
+- API Root: http://localhost:8000/ (returns list of available endpoints)
+- Full API Reference: [docs/API.md](docs/API.md)
 - Swagger UI: http://localhost:8000/api-docs (to be implemented)
-- OpenAPI Spec: `/docs/api/` (to be created)
 
 ## Technology Stack
 
@@ -146,10 +147,10 @@ API documentation will be available at:
 - Logging: log4js
 - API Documentation: Swagger/OpenAPI (to be added)
 
-### Frontend (To Be Implemented)
-- Framework: React, Vue.js, or Angular
-- State Management: Redux/Vuex
-- UI Library: Material-UI/Ant Design
+### Frontend (Implemented)
+- Vanilla JavaScript SPA (Single Page Application)
+- Responsive CSS with CSS Custom Properties
+- Admin dashboard with full CRUD operations
 
 ### Infrastructure
 - Containerization: Docker
@@ -176,10 +177,10 @@ API documentation will be available at:
 - [x] Service communication via HTTP proxying
 - [x] Authentication & authorization with JWT
 
-### Phase 4: Frontend
-- [ ] UI design and implementation
-- [ ] Admin dashboard
-- [ ] User interfaces
+### Phase 4: Frontend (Completed)
+- [x] UI design and implementation
+- [x] Admin dashboard
+- [x] User interfaces (Students, Teachers, Activities, Rooms, Bookings)
 
 ### Phase 5: Testing & Deployment (In Progress)
 - [x] Unit tests for all services
