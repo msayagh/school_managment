@@ -4,8 +4,10 @@ WORKDIR /app
 
 # Copy shared utilities
 COPY shared/ /app/shared/
+RUN cd /app/shared && npm install
 
 # Copy package files
+WORKDIR /app/services/teachers
 COPY services/teachers/package*.json ./
 
 # Install dependencies

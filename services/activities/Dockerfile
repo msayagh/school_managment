@@ -4,7 +4,10 @@ WORKDIR /app
 
 # Copy shared utilities
 COPY shared/ /app/shared/
+RUN cd /app/shared && npm install
 
+# Copy package files
+WORKDIR /app/services/activities
 # Copy package files
 COPY services/activities/package*.json ./
 
