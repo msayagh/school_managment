@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>School Management System</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: #1a237e;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    header h1 { font-size: 1.5rem; }
+    .badge {
+      background: #ff6f00;
+      color: white;
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+    main {
+      flex: 1;
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      width: 100%;
+    }
+    .hero {
+      background: white;
+      border-radius: 8px;
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .hero h2 { font-size: 2rem; color: #1a237e; margin-bottom: 0.5rem; }
+    .hero p { color: #666; margin-bottom: 1.5rem; }
+    .api-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #e8f5e9;
+      color: #2e7d32;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      background: #4caf50;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .card .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .card h3 { font-size: 1rem; color: #1a237e; margin-bottom: 0.25rem; }
+    .card p { font-size: 0.8rem; color: #888; }
+    .api-section {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .api-section h3 { color: #1a237e; margin-bottom: 1rem; }
+    .endpoint-list { list-style: none; }
+    .endpoint-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 0.9rem;
+    }
+    .endpoint-list li:last-child { border-bottom: none; }
+    .method {
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      min-width: 50px;
+      text-align: center;
+    }
+    .get { background: #e3f2fd; color: #1565c0; }
+    .post { background: #e8f5e9; color: #2e7d32; }
+    footer {
+      background: #1a237e;
+      color: rgba(255,255,255,0.7);
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🏫 School Management System</h1>
+    <span class="badge">v1.0</span>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h2>Welcome to School Management System</h2>
+      <p>A microservices-based platform for managing school operations</p>
+      <div id="apiStatus" class="api-status">
+        <div class="dot"></div>
+        <span>Checking API status...</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card" onclick="navigate('/api/students')">
+        <div class="icon">👨‍🎓</div>
+        <h3>Students</h3>
+        <p>Manage student registrations</p>
+      </div>
+      <div class="card" onclick="navigate('/api/teachers')">
+        <div class="icon">👩‍🏫</div>
+        <h3>Teachers</h3>
+        <p>Manage teacher profiles</p>
+      </div>
+      <div class="card" onclick="navigate('/api/activities')">
+        <div class="icon">📚</div>
+        <h3>Activities</h3>
+        <p>Create and schedule activities</p>
+      </div>
+      <div class="card" onclick="navigate('/api/rooms')">
+        <div class="icon">🏛️</div>
+        <h3>Rooms</h3>
+        <p>Manage school facilities</p>
+      </div>
+      <div class="card" onclick="navigate('/api/bookings')">
+        <div class="icon">📅</div>
+        <h3>Bookings</h3>
+        <p>Room reservations system</p>
+      </div>
+      <div class="card" onclick="navigate('/health')">
+        <div class="icon">⚙️</div>
+        <h3>API Gateway</h3>
+        <p>Check system health</p>
+      </div>
+    </div>
+
+    <div class="api-section">
+      <h3>Available API Endpoints</h3>
+      <ul class="endpoint-list">
+        <li><span class="method post">POST</span> /api/auth/register — Register a new user</li>
+        <li><span class="method post">POST</span> /api/auth/login — Authenticate and get token</li>
+        <li><span class="method get">GET</span> /api/auth/me — Get current user info</li>
+        <li><span class="method get">GET</span> /api/students — List all students</li>
+        <li><span class="method post">POST</span> /api/students — Register a new student</li>
+        <li><span class="method get">GET</span> /api/teachers — List all teachers</li>
+        <li><span class="method post">POST</span> /api/teachers — Add a new teacher</li>
+        <li><span class="method get">GET</span> /api/activities — List all activities</li>
+        <li><span class="method post">POST</span> /api/activities — Create a new activity</li>
+        <li><span class="method get">GET</span> /api/rooms — List all rooms</li>
+        <li><span class="method post">POST</span> /api/rooms — Add a new room</li>
+        <li><span class="method get">GET</span> /api/bookings — List all bookings</li>
+        <li><span class="method post">POST</span> /api/bookings — Create a booking</li>
+      </ul>
+    </div>
+  </main>
+
+  <footer>
+    <p>School Management System &copy; 2024 — Built with Node.js microservices</p>
+  </footer>
+
+  <script>
+    const API_URL = window.location.hostname === 'localhost'
+      ? 'http://localhost:8000'
+      : `${window.location.protocol}//${window.location.hostname}:8000`;
+
+    function navigate(path) {
+      window.open(API_URL + path, '_blank');
+    }
+
+    async function checkApiStatus() {
+      const statusEl = document.getElementById('apiStatus');
+      try {
+        const resp = await fetch(API_URL + '/health');
+        if (resp.ok) {
+          statusEl.innerHTML = '<div class="dot"></div><span>API Gateway is online</span>';
+          statusEl.style.background = '#e8f5e9';
+          statusEl.style.color = '#2e7d32';
+        } else {
+          throw new Error('API returned non-OK status');
+        }
+      } catch {
+        statusEl.innerHTML = '<div class="dot" style="background:#f44336"></div><span>API Gateway offline — start with docker-compose up</span>';
+        statusEl.style.background = '#ffebee';
+        statusEl.style.color = '#c62828';
+      }
+    }
+
+    checkApiStatus();
+  </script>
+</body>
+</html>

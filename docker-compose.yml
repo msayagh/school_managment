@@ -21,7 +21,7 @@ services:
     networks:
       - school-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -29,32 +29,45 @@ services:
   # API Gateway Service
   api-gateway:
     build:
-      context: ./services/api-gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
     container_name: school-api-gateway
     ports:
       - "8000:8000"
     environment:
       - NODE_ENV=development
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_USER=school_admin
+      - DB_PASSWORD=${MYSQL_PASSWORD:-changeme}
+      - DB_NAME=school_management
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-insecure}
       - STUDENTS_SERVICE_URL=http://students-service:3001
       - TEACHERS_SERVICE_URL=http://teachers-service:3002
       - ACTIVITIES_SERVICE_URL=http://activities-service:3003
       - ROOMS_SERVICE_URL=http://rooms-service:3004
       - BOOKINGS_SERVICE_URL=http://bookings-service:3005
     depends_on:
-      - students-service
-      - teachers-service
-      - activities-service
-      - rooms-service
-      - bookings-service
+      database:
+        condition: service_healthy
+      students-service:
+        condition: service_started
+      teachers-service:
+        condition: service_started
+      activities-service:
+        condition: service_started
+      rooms-service:
+        condition: service_started
+      bookings-service:
+        condition: service_started
     networks:
       - school-network
 
   # Students Microservice
   students-service:
     build:
-      context: ./services/students
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/students/Dockerfile
     container_name: school-students-service
     ports:
       - "3001:3001"
@@ -63,7 +76,7 @@ services:
       - DB_HOST=database
       - DB_PORT=3306
       - DB_USER=school_admin
-      - DB_PASSWORD=changeme
+      - DB_PASSWORD=${MYSQL_PASSWORD:-changeme}
       - DB_NAME=school_management
       - SERVICE_PORT=3001
       - JWT_SECRET=${JWT_SECRET:-dev-secret-insecure}
@@ -76,8 +89,8 @@ services:
   # Teachers Microservice
   teachers-service:
     build:
-      context: ./services/teachers
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/teachers/Dockerfile
     container_name: school-teachers-service
     ports:
       - "3002:3002"
@@ -86,7 +99,7 @@ services:
       - DB_HOST=database
       - DB_PORT=3306
       - DB_USER=school_admin
-      - DB_PASSWORD=changeme
+      - DB_PASSWORD=${MYSQL_PASSWORD:-changeme}
       - DB_NAME=school_management
       - SERVICE_PORT=3002
       - JWT_SECRET=${JWT_SECRET:-dev-secret-insecure}
@@ -99,8 +112,8 @@ services:
   # Activities Microservice
   activities-service:
     build:
-      context: ./services/activities
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/activities/Dockerfile
     container_name: school-activities-service
     ports:
       - "3003:3003"
@@ -109,7 +122,7 @@ services:
       - DB_HOST=database
       - DB_PORT=3306
       - DB_USER=school_admin
-      - DB_PASSWORD=changeme
+      - DB_PASSWORD=${MYSQL_PASSWORD:-changeme}
       - DB_NAME=school_management
       - SERVICE_PORT=3003
       - JWT_SECRET=${JWT_SECRET:-dev-secret-insecure}
@@ -122,8 +135,8 @@ services:
   # Rooms Microservice
   rooms-service:
     build:
-      context: ./services/rooms
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/rooms/Dockerfile
     container_name: school-rooms-service
     ports:
       - "3004:3004"
@@ -132,7 +145,7 @@ services:
       - DB_HOST=database
       - DB_PORT=3306
       - DB_USER=school_admin
-      - DB_PASSWORD=changeme
+      - DB_PASSWORD=${MYSQL_PASSWORD:-changeme}
       - DB_NAME=school_management
       - SERVICE_PORT=3004
       - JWT_SECRET=${JWT_SECRET:-dev-secret-insecure}
@@ -145,8 +158,8 @@ services:
   # Bookings Microservice
   bookings-service:
     build:
-      context: ./services/bookings
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/bookings/Dockerfile
     container_name: school-bookings-service
     ports:
       - "3005:3005"
@@ -155,7 +168,7 @@ services:
       - DB_HOST=database
       - DB_PORT=3306
       - DB_USER=school_admin
-      - DB_PASSWORD=changeme
+      - DB_PASSWORD=${MYSQL_PASSWORD:-changeme}
       - DB_NAME=school_management
       - SERVICE_PORT=3005
       - JWT_SECRET=${JWT_SECRET:-dev-secret-insecure}
@@ -168,14 +181,14 @@ services:
   # UI Service
   ui-service:
     build:
-      context: ./services/ui
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/ui/Dockerfile
     container_name: school-ui-service
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - REACT_APP_API_URL=http://localhost:8000
+      - API_GATEWAY_URL=http://api-gateway:8000
     depends_on:
       - api-gateway
     networks:
