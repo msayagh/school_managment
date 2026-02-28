@@ -47,6 +47,7 @@ services:
       - ACTIVITIES_SERVICE_URL=http://activities-service:3003
       - ROOMS_SERVICE_URL=http://rooms-service:3004
       - BOOKINGS_SERVICE_URL=http://bookings-service:3005
+      - AUTH_SERVICE_URL=http://auth-service:3007
     depends_on:
       database:
         condition: service_healthy
@@ -59,6 +60,8 @@ services:
       rooms-service:
         condition: service_started
       bookings-service:
+        condition: service_started
+      auth-service:
         condition: service_started
     networks:
       - school-network
@@ -171,6 +174,29 @@ services:
       - DB_PASSWORD=${MYSQL_PASSWORD:-changeme}
       - DB_NAME=school_management
       - SERVICE_PORT=3005
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-insecure}
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - school-network
+
+  # Auth Microservice
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+    container_name: school-auth-service
+    ports:
+      - "3007:3007"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_USER=school_admin
+      - DB_PASSWORD=${MYSQL_PASSWORD:-changeme}
+      - DB_NAME=school_management
+      - SERVICE_PORT=3007
       - JWT_SECRET=${JWT_SECRET:-dev-secret-insecure}
     depends_on:
       database:
