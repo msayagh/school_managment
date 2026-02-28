@@ -12,42 +12,44 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    
+
     strategy:
       matrix:
-        service: [students, teachers, activities, rooms, bookings, api-gateway]
-    
+        service: [students, teachers, activities, rooms, bookings, api-gateway, ui]
+
     steps:
-    - uses: actions/checkout@v3
-    
+    - uses: actions/checkout@v4
+
     - name: Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '18'
-    
+
     - name: Install shared dependencies
+      if: matrix.service != 'ui'
       run: |
         cd shared
         npm install
-    
+
     - name: Install service dependencies
       run: |
         cd services/${{ matrix.service }}
         npm install
-    
+
     - name: Run tests
       run: |
         cd services/${{ matrix.service }}
         npm test
       env:
         NODE_ENV: test
-    
+
     - name: Upload coverage
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         files: ./services/${{ matrix.service }}/coverage/coverage-final.json
         flags: ${{ matrix.service }}
         name: ${{ matrix.service }}-coverage
+      continue-on-error: true
 
   build-images:
     name: Build Docker Images
@@ -56,27 +58,27 @@ jobs:
     if: github.event_name == 'push'
     permissions:
       contents: read
-    
+
     strategy:
       matrix:
-        service: [students, teachers, activities, rooms, bookings, api-gateway]
-    
+        service: [students, teachers, activities, rooms, bookings, api-gateway, ui]
+
     steps:
-    - uses: actions/checkout@v3
-    
+    - uses: actions/checkout@v4
+
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-    
+      uses: docker/setup-buildx-action@v3
+
     - name: Build Docker image
       run: |
         docker build -f services/${{ matrix.service }}/Dockerfile -t school-${{ matrix.service }}:latest .
-    
+
     - name: Save Docker image
       run: |
         docker save school-${{ matrix.service }}:latest | gzip > ${{ matrix.service }}-image.tar.gz
-    
+
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.service }}-image
         path: ${{ matrix.service }}-image.tar.gz
@@ -88,7 +90,7 @@ jobs:
     needs: test-services
     permissions:
       contents: read
-    
+
     services:
       mysql:
         image: mysql:8.0
@@ -104,15 +106,15 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
-    
+
     steps:
-    - uses: actions/checkout@v3
-    
+    - uses: actions/checkout@v4
+
     - name: Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '18'
-    
+
     - name: Wait for MySQL
       run: |
         for i in {1..30}; do
@@ -123,21 +125,21 @@ jobs:
           echo "Waiting for MySQL..."
           sleep 2
         done
-    
+
     - name: Initialize database
       run: |
         mysql -h 127.0.0.1 -u root -prootpassword school_management < services/database/init/01-schema.sql
-    
+
     - name: Install dependencies
       run: |
-        cd shared && npm install
-        cd ../services/students && npm install
-        cd ../teachers && npm install
-        cd ../activities && npm install
-        cd ../rooms && npm install
-        cd ../bookings && npm install
-        cd ../api-gateway && npm install
-    
+        cd shared && npm install && cd ..
+        cd services/students && npm install && cd ../..
+        cd services/teachers && npm install && cd ../..
+        cd services/activities && npm install && cd ../..
+        cd services/rooms && npm install && cd ../..
+        cd services/bookings && npm install && cd ../..
+        cd services/api-gateway && npm install && cd ../..
+
     - name: Run integration tests
       run: |
         echo "Integration tests would run here"
