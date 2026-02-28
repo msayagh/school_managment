@@ -34,6 +34,66 @@ app.get('/api/teachers', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
+// Get all available teachers for a time range (MUST be before /:id route)
+app.get('/api/teachers/available', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const { start_time, end_time } = req.query;
+
+    // Get all active teachers
+    const teachers = await database.query(
+      'SELECT * FROM teachers WHERE status = "active" ORDER BY first_name, last_name'
+    );
+
+    if (!start_time || !end_time) {
+      logger.info(`Retrieved ${teachers.length} active teachers`);
+      return res.json(teachers);
+    }
+
+    // Check availability for each teacher
+    const availableTeachers = [];
+    for (const teacher of teachers) {
+      // Find all activities assigned to this teacher
+      const activities = await database.query(
+        'SELECT id FROM activities WHERE teacher_id = ? AND status = "active"',
+        [teacher.id]
+      );
+
+      if (activities.length === 0) {
+        availableTeachers.push({...teacher, available: true, bookings: []});
+        continue;
+      }
+
+      const activityIds = activities.map(a => a.id);
+      const placeholders = activityIds.map(() => '?').join(',');
+
+      // Check for conflicts
+      const conflicts = await database.query(
+        `SELECT * FROM bookings
+         WHERE activity_id IN (${placeholders})
+         AND status != 'cancelled'
+         AND (
+           (start_time <= ? AND end_time > ?) OR
+           (start_time < ? AND end_time >= ?) OR
+           (start_time >= ? AND end_time <= ?)
+         )`,
+        [...activityIds, start_time, start_time, end_time, end_time, start_time, end_time]
+      );
+
+      if (conflicts.length === 0) {
+        availableTeachers.push({...teacher, available: true, bookings: []});
+      } else {
+        availableTeachers.push({...teacher, available: false, bookings: conflicts});
+      }
+    }
+
+    logger.info(`Found ${availableTeachers.filter(t => t.available).length} available teachers out of ${teachers.length}`);
+    res.json(availableTeachers);
+  } catch (error) {
+    logger.error('Failed to get available teachers', { error: error.message });
+    res.status(500).json({ error: 'Failed to retrieve available teachers' });
+  }
+});
+
 // Get teacher by ID
 app.get('/api/teachers/:id', optionalAuthMiddleware, async (req, res) => {
   try {
@@ -199,6 +259,90 @@ app.get('/api/teachers/:id/activities', optionalAuthMiddleware, async (req, res)
   } catch (error) {
     logger.error('Failed to get teacher activities', { error: error.message });
     res.status(500).json({ error: 'Failed to retrieve activities' });
+  }
+});
+
+// Get teacher availability for a time range
+app.get('/api/teachers/:id/availability', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { start_time, end_time } = req.query;
+
+    // Check if teacher exists
+    const teachers = await database.query('SELECT * FROM teachers WHERE id = ?', [id]);
+    if (teachers.length === 0) {
+      return res.status(404).json({ error: 'Teacher not found' });
+    }
+
+    const teacher = teachers[0];
+
+    // If teacher is not active, they're not available
+    if (teacher.status !== 'active') {
+      return res.json({
+        teacher_id: parseInt(id),
+        available: false,
+        reason: 'Teacher is not active',
+        conflicts: []
+      });
+    }
+
+    // If no time range, just return teacher status
+    if (!start_time || !end_time) {
+      return res.json({
+        teacher_id: parseInt(id),
+        available: teacher.status === 'active',
+        status: teacher.status
+      });
+    }
+
+    // Find all activities assigned to this teacher
+    const activities = await database.query(
+      'SELECT id FROM activities WHERE teacher_id = ? AND status = "active"',
+      [id]
+    );
+
+    if (activities.length === 0) {
+      return res.json({
+        teacher_id: parseInt(id),
+        available: true,
+        conflicts: []
+      });
+    }
+
+    const activityIds = activities.map(a => a.id);
+
+    // Check for booking conflicts
+    const placeholders = activityIds.map(() => '?').join(',');
+    const conflicts = await database.query(
+      `SELECT b.*, a.name as activity_name FROM bookings b
+       JOIN activities a ON b.activity_id = a.id
+       WHERE b.activity_id IN (${placeholders})
+       AND b.status != 'cancelled'
+       AND (
+         (b.start_time <= ? AND b.end_time > ?) OR
+         (b.start_time < ? AND b.end_time >= ?) OR
+         (b.start_time >= ? AND b.end_time <= ?)
+       )`,
+      [...activityIds, start_time, start_time, end_time, end_time, start_time, end_time]
+    );
+
+    const available = conflicts.length === 0;
+
+    logger.info(`Checked availability for teacher ${id}: ${available ? 'available' : 'busy'}`);
+    res.json({
+      teacher_id: parseInt(id),
+      available,
+      conflicts: conflicts.map(c => ({
+        booking_id: c.id,
+        activity_name: c.activity_name,
+        start_time: c.start_time,
+        end_time: c.end_time,
+        room_id: c.room_id
+      }))
+    });
+  } catch (error) {
+    logger.error('Failed to check teacher availability', { error: error.message });
+    res.status(500).json({ error: 'Failed to check teacher availability' });
   }
 });
 

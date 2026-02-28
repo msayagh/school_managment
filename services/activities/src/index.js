@@ -34,6 +34,32 @@ app.get('/api/activities', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
+// Get all activities with enrollment counts (MUST be before /:id route)
+app.get('/api/activities/with-enrollment', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const activities = await database.query(`
+      SELECT 
+        a.*,
+        COUNT(ae.id) as enrolled_count,
+        (a.capacity - COUNT(ae.id)) as available_spots
+      FROM activities a
+      LEFT JOIN activity_enrollments ae ON a.id = ae.activity_id AND ae.status = 'enrolled'
+      GROUP BY a.id
+      ORDER BY a.id DESC
+    `);
+    
+    logger.info(`Retrieved ${activities.length} activities with enrollment counts`);
+    res.json(activities.map(a => ({
+      ...a,
+      enrolled_count: parseInt(a.enrolled_count),
+      available_spots: parseInt(a.available_spots)
+    })));
+  } catch (error) {
+    logger.error('Failed to get activities with enrollment', { error: error.message });
+    res.status(500).json({ error: 'Failed to retrieve activities' });
+  }
+});
+
 // Get activity by ID
 app.get('/api/activities/:id', optionalAuthMiddleware, async (req, res) => {
   try {
@@ -291,6 +317,122 @@ app.put('/api/activities/:id/teacher', authMiddleware, async (req, res) => {
   } catch (error) {
     logger.error('Failed to assign teacher', { error: error.message });
     res.status(500).json({ error: 'Failed to assign teacher' });
+  }
+});
+
+// Get activity capacity and enrollment info
+app.get('/api/activities/:id/capacity', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Check if activity exists
+    const activities = await database.query('SELECT * FROM activities WHERE id = ?', [id]);
+    if (activities.length === 0) {
+      return res.status(404).json({ error: 'Activity not found' });
+    }
+
+    const activity = activities[0];
+
+    // Count enrolled students
+    const enrolled = await database.query(
+      'SELECT COUNT(*) as count FROM activity_enrollments WHERE activity_id = ? AND status = "enrolled"',
+      [id]
+    );
+
+    const enrolledCount = enrolled[0].count;
+    const capacity = activity.capacity;
+    const availableSpots = capacity - enrolledCount;
+    const isFull = availableSpots <= 0;
+
+    logger.info(`Retrieved capacity info for activity ${id}`);
+    res.json({
+      activity_id: parseInt(id),
+      capacity,
+      enrolled: enrolledCount,
+      available: availableSpots,
+      is_full: isFull,
+      percentage: Math.round((enrolledCount / capacity) * 100)
+    });
+  } catch (error) {
+    logger.error('Failed to get activity capacity', { error: error.message });
+    res.status(500).json({ error: 'Failed to retrieve activity capacity' });
+  }
+});
+
+// Get all enrollments (can be called from any service)
+app.get('/api/enrollments', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const enrollments = await database.query(`
+      SELECT 
+        ae.*,
+        s.first_name,
+        s.last_name,
+        s.email,
+        a.name as activity_name,
+        a.capacity as activity_capacity
+      FROM activity_enrollments ae
+      LEFT JOIN students s ON ae.student_id = s.id
+      LEFT JOIN activities a ON ae.activity_id = a.id
+      ORDER BY ae.enrollment_date DESC
+    `);
+    
+    logger.info(`Retrieved ${enrollments.length} enrollments`);
+    res.json(enrollments);
+  } catch (error) {
+    logger.error('Failed to get enrollments', { error: error.message });
+    res.status(500).json({ error: 'Failed to retrieve enrollments' });
+  }
+});
+
+// Get enrollments for a specific student
+app.get('/api/students/:id/enrollments', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const enrollments = await database.query(`
+      SELECT 
+        ae.*,
+        a.name as activity_name,
+        a.capacity as activity_capacity,
+        t.first_name as teacher_first_name,
+        t.last_name as teacher_last_name
+      FROM activity_enrollments ae
+      LEFT JOIN activities a ON ae.activity_id = a.id
+      LEFT JOIN teachers t ON a.teacher_id = t.id
+      WHERE ae.student_id = ?
+      ORDER BY ae.enrollment_date DESC
+    `, [id]);
+    
+    logger.info(`Retrieved ${enrollments.length} enrollments for student ${id}`);
+    res.json(enrollments);
+  } catch (error) {
+    logger.error('Failed to get student enrollments', { error: error.message });
+    res.status(500).json({ error: 'Failed to retrieve student enrollments' });
+  }
+});
+
+// Get enrollments for a specific activity
+app.get('/api/activities/:id/enrollments', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const enrollments = await database.query(`
+      SELECT 
+        ae.*,
+        s.first_name,
+        s.last_name,
+        s.email
+      FROM activity_enrollments ae
+      LEFT JOIN students s ON ae.student_id = s.id
+      WHERE ae.activity_id = ?
+      ORDER BY ae.enrollment_date DESC
+    `, [id]);
+    
+    logger.info(`Retrieved ${enrollments.length} enrollments for activity ${id}`);
+    res.json(enrollments);
+  } catch (error) {
+    logger.error('Failed to get activity enrollments', { error: error.message });
+    res.status(500).json({ error: 'Failed to retrieve activity enrollments' });
   }
 });
 

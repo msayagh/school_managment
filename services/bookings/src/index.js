@@ -12,6 +12,24 @@ const logger = getLogger('bookings-service');
 const app = express();
 const PORT = process.env.SERVICE_PORT || 3005;
 
+// Helper function to normalize datetime format
+// Converts ISO format (2026-03-01T14:00:00Z) to MySQL format (2026-03-01 14:00:00)
+function normalizeDatetime(datetimeStr) {
+  if (!datetimeStr) return null;
+  
+  // If already in MySQL format (YYYY-MM-DD HH:MM:SS), return as is
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(datetimeStr)) {
+    return datetimeStr;
+  }
+  
+  // Convert ISO format (2026-03-01T14:00:00Z or 2026-03-01T14:00:00) to MySQL format
+  // Remove 'Z' and replace 'T' with space
+  const normalized = datetimeStr.replace('Z', '').replace('T', ' ');
+  
+  // Return first 19 characters (YYYY-MM-DD HH:MM:SS)
+  return normalized.slice(0, 19);
+}
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -120,13 +138,17 @@ app.post('/api/bookings', authMiddleware, async (req, res) => {
   try {
     const { room_id, activity_id, title, description, start_time, end_time, status, created_by } = req.body;
     
+    // Normalize datetime format (convert ISO to MySQL format)
+    const normalizedStartTime = normalizeDatetime(start_time);
+    const normalizedEndTime = normalizeDatetime(end_time);
+    
     // Validate required fields
-    if (!room_id || !title || !start_time || !end_time) {
+    if (!room_id || !title || !normalizedStartTime || !normalizedEndTime) {
       return res.status(400).json({ error: 'Room ID, title, start time, and end time are required' });
     }
 
     // Validate time range
-    if (new Date(start_time) >= new Date(end_time)) {
+    if (new Date(normalizedStartTime) >= new Date(normalizedEndTime)) {
       return res.status(400).json({ error: 'End time must be after start time' });
     }
 
@@ -146,7 +168,7 @@ app.post('/api/bookings', authMiddleware, async (req, res) => {
          (start_time < ? AND end_time >= ?) OR
          (start_time >= ? AND end_time <= ?)
        )`,
-      [room_id, start_time, start_time, end_time, end_time, start_time, end_time]
+      [room_id, normalizedStartTime, normalizedStartTime, normalizedEndTime, normalizedEndTime, normalizedStartTime, normalizedEndTime]
     );
 
     if (conflicts.length > 0) {
@@ -167,8 +189,8 @@ app.post('/api/bookings', authMiddleware, async (req, res) => {
         normalizedActivityId,
         title,
         normalizedDescription,
-        start_time,
-        end_time,
+        normalizedStartTime,
+        normalizedEndTime,
         status || 'pending',
         normalizedCreatedBy
       ]
@@ -196,11 +218,15 @@ app.put('/api/bookings/:id', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Booking not found' });
     }
 
+    // Normalize datetime format if provided
+    const normalizedStartTime = start_time ? normalizeDatetime(start_time) : null;
+    const normalizedEndTime = end_time ? normalizeDatetime(end_time) : null;
+
     // If updating time or room, check for conflicts
-    if (room_id || start_time || end_time) {
+    if (room_id || normalizedStartTime || normalizedEndTime) {
       const checkRoomId = room_id || existing[0].room_id;
-      const checkStartTime = start_time || existing[0].start_time;
-      const checkEndTime = end_time || existing[0].end_time;
+      const checkStartTime = normalizedStartTime || existing[0].start_time;
+      const checkEndTime = normalizedEndTime || existing[0].end_time;
 
       // Validate time range
       if (new Date(checkStartTime) >= new Date(checkEndTime)) {
@@ -235,8 +261,8 @@ app.put('/api/bookings/:id', authMiddleware, async (req, res) => {
     if (activity_id !== undefined) { updates.push('activity_id = ?'); values.push(activity_id); }
     if (title) { updates.push('title = ?'); values.push(title); }
     if (description !== undefined) { updates.push('description = ?'); values.push(description); }
-    if (start_time) { updates.push('start_time = ?'); values.push(start_time); }
-    if (end_time) { updates.push('end_time = ?'); values.push(end_time); }
+    if (normalizedStartTime) { updates.push('start_time = ?'); values.push(normalizedStartTime); }
+    if (normalizedEndTime) { updates.push('end_time = ?'); values.push(normalizedEndTime); }
     if (status) { updates.push('status = ?'); values.push(status); }
 
     if (updates.length === 0) {

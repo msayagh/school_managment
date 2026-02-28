@@ -55,7 +55,7 @@ app.get('/api/students/:id', optionalAuthMiddleware, async (req, res) => {
 // Create new student
 app.post('/api/students', authMiddleware, async (req, res) => {
   try {
-    const { first_name, last_name, email, phone, address, date_of_birth, enrollment_date, status } = req.body;
+    const { first_name, last_name, email, phone, address, enrollment_date, status } = req.body;
     
     // Validate required fields
     if (!first_name || !last_name || !email) {
@@ -64,17 +64,15 @@ app.post('/api/students', authMiddleware, async (req, res) => {
 
     const normalizedPhone = phone ?? null;
     const normalizedAddress = address ?? null;
-    const normalizedDateOfBirth = date_of_birth ?? null;
 
     const result = await database.query(
-      'INSERT INTO students (first_name, last_name, email, phone, address, date_of_birth, enrollment_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO students (first_name, last_name, email, phone, address, enrollment_date, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [
         first_name,
         last_name,
         email,
         normalizedPhone,
         normalizedAddress,
-        normalizedDateOfBirth,
         enrollment_date || new Date(),
         status || 'active'
       ]
@@ -97,7 +95,7 @@ app.post('/api/students', authMiddleware, async (req, res) => {
 app.put('/api/students/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const { first_name, last_name, email, phone, address, date_of_birth, status } = req.body;
+    const { first_name, last_name, email, phone, address, status } = req.body;
     
     // Check if student exists
     const existing = await database.query('SELECT * FROM students WHERE id = ?', [id]);
@@ -113,7 +111,6 @@ app.put('/api/students/:id', authMiddleware, async (req, res) => {
     if (email) { updates.push('email = ?'); values.push(email); }
     if (phone !== undefined) { updates.push('phone = ?'); values.push(phone); }
     if (address !== undefined) { updates.push('address = ?'); values.push(address); }
-    if (date_of_birth !== undefined) { updates.push('date_of_birth = ?'); values.push(date_of_birth); }
     if (status) { updates.push('status = ?'); values.push(status); }
 
     if (updates.length === 0) {

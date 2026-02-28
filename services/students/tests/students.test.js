@@ -104,7 +104,7 @@ describe('Students Service', () => {
 
       database.query
         .mockResolvedValueOnce({ insertId: 2 })
-        .mockResolvedValueOnce([{ id: 2, ...newStudent, phone: null, address: null, date_of_birth: null }]);
+        .mockResolvedValueOnce([{ id: 2, ...newStudent, phone: null, address: null }]);
 
       const response = await request(app)
         .post('/api/students')

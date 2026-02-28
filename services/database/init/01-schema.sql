@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS students (
     email VARCHAR(255) UNIQUE NOT NULL,
     phone VARCHAR(20),
     address TEXT,
-    date_of_birth DATE,
     enrollment_date DATE NOT NULL DEFAULT (CURRENT_DATE),
     status ENUM('active', 'inactive', 'graduated') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

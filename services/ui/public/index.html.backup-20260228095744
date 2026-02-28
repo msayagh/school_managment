@@ -362,39 +362,27 @@
 
     <!-- Register Form -->
     <form id="register-form" style="display:none" onsubmit="doRegister(event)">
-      <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem;">Students register here. Staff accounts are created by admins.</p>
       <div class="form-group">
-        <label>First Name *</label>
-        <input type="text" id="reg-first-name" placeholder="John" required>
+        <label>Username</label>
+        <input type="text" id="reg-username" placeholder="admin" required>
       </div>
       <div class="form-group">
-        <label>Last Name *</label>
-        <input type="text" id="reg-last-name" placeholder="Doe" required>
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="admin@school.com" required>
       </div>
       <div class="form-group">
-        <label>Username *</label>
-        <div style="position:relative;display:flex;gap:0.5rem;align-items:center;">
-          <input type="text" id="reg-username" placeholder="Choose your username" required oninput="checkUsernameAvailability()" style="flex:1;">
-          <span id="username-status" style="font-size:1.2rem;min-width:2rem;text-align:center;"></span>
-        </div>
-        <small style="color:var(--text-secondary);margin-top:0.25rem;display:block;">
-          3-20 characters: letters, numbers, dots, hyphens, underscores
-        </small>
-        <small id="username-error" style="color:var(--error);margin-top:0.25rem;display:none;"></small>
-      </div>
-      <div class="form-group">
-        <label>Email *</label>
-        <input type="email" id="reg-email" placeholder="john.doe@example.com" required>
-      </div>
-      <div class="form-group">
-        <label>Phone</label>
-        <input type="tel" id="reg-phone" placeholder="+1234567890">
-      </div>
-      <div class="form-group">
-        <label>Password *</label>
+        <label>Password</label>
         <input type="password" id="reg-password" placeholder="••••••••" required minlength="6">
       </div>
-      <button type="submit" class="btn btn-primary btn-full">Create Student Account</button>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="reg-role">
+          <option value="admin">Admin</option>
+          <option value="teacher">Teacher</option>
+          <option value="student">Student</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Create Account</button>
     </form>
   </div>
 </div>
@@ -408,38 +396,25 @@
       <p>Admin Dashboard</p>
     </div>
     <div class="sidebar-nav">
-      <div class="nav-section" data-roles="admin">Overview</div>
-      <a class="nav-item active" data-page="dashboard" data-roles="admin" onclick="navigate('dashboard')">
+      <div class="nav-section">Overview</div>
+      <a class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
         <span class="nav-icon">📊</span> Dashboard
       </a>
-      <a class="nav-item" data-page="teacher-portal" data-roles="teacher" onclick="navigate('teacher-portal')">
-        <span class="nav-icon">👩‍🏫</span> My Teaching
-      </a>
-      <a class="nav-item" data-page="student-portal" data-roles="student" onclick="navigate('student-portal')">
-        <span class="nav-icon">🎒</span> My Learning
-      </a>
-
-      <div class="nav-section" data-roles="admin">Management</div>
-      <a class="nav-item" data-page="students" data-roles="admin" onclick="navigate('students')">
+      <div class="nav-section">Management</div>
+      <a class="nav-item" data-page="students" onclick="navigate('students')">
         <span class="nav-icon">👨‍🎓</span> Students
       </a>
-      <a class="nav-item" data-page="teachers" data-roles="admin" onclick="navigate('teachers')">
+      <a class="nav-item" data-page="teachers" onclick="navigate('teachers')">
         <span class="nav-icon">👩‍</span> Teachers
       </a>
-      <a class="nav-item" data-page="activities" data-roles="admin" onclick="navigate('activities')">
+      <a class="nav-item" data-page="activities" onclick="navigate('activities')">
         <span class="nav-icon">📚</span> Activities
       </a>
-      <a class="nav-item" data-page="rooms" data-roles="admin" onclick="navigate('rooms')">
+      <a class="nav-item" data-page="rooms" onclick="navigate('rooms')">
         <span class="nav-icon">🏛️</span> Rooms
       </a>
-      <a class="nav-item" data-page="bookings" data-roles="admin,teacher" onclick="navigate('bookings')">
+      <a class="nav-item" data-page="bookings" onclick="navigate('bookings')">
         <span class="nav-icon">📅</span> Bookings
-      </a>
-      <a class="nav-item" data-page="users" data-roles="admin" onclick="navigate('users')">
-        <span class="nav-icon">👥</span> Users
-      </a>
-      <a class="nav-item" data-page="profile" data-roles="admin,teacher,student" onclick="navigate('profile')">
-        <span class="nav-icon">🙍</span> Profile
       </a>
     </div>
     <div class="sidebar-footer">
@@ -687,93 +662,6 @@
         </div>
       </div>
 
-      <!-- TEACHER PORTAL PAGE -->
-      <div class="page" id="page-teacher-portal">
-        <div class="card">
-          <div class="card-header">
-            <h2>👩‍🏫 My Activities</h2>
-          </div>
-          <div class="card-body" id="teacher-portal-activities">
-            <div class="loading"><div class="spinner"></div> Loading activities…</div>
-          </div>
-        </div>
-        <div class="card" style="margin-top:1rem;">
-          <div class="card-header">
-            <h2>📅 My Schedule</h2>
-          </div>
-          <div class="card-body table-wrap" id="teacher-portal-schedule">
-            <div class="loading"><div class="spinner"></div> Loading schedule…</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- STUDENT PORTAL PAGE -->
-      <div class="page" id="page-student-portal">
-        <div class="card">
-          <div class="card-header">
-            <h2>📚 Available Activities</h2>
-          </div>
-          <div class="card-body" id="student-portal-activities">
-            <div class="loading"><div class="spinner"></div> Loading activities…</div>
-          </div>
-        </div>
-        <div class="card" style="margin-top:1rem;">
-          <div class="card-header">
-            <h2>🎓 My Enrollments</h2>
-          </div>
-          <div class="card-body" id="student-portal-enrollments">
-            <div class="loading"><div class="spinner"></div> Loading enrollments…</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- USERS PAGE -->
-      <div class="page" id="page-users">
-        <div class="card">
-          <div class="card-header">
-            <h2>User Accounts</h2>
-            <div class="header-actions">
-              <button class="btn btn-accent btn-sm" onclick="openCreateUserModal()">+ Add User</button>
-            </div>
-          </div>
-          <div class="card-body table-wrap" id="users-table">
-            <div class="loading"><div class="spinner"></div> Loading users…</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PROFILE PAGE -->
-      <div class="page" id="page-profile">
-        <div class="card">
-          <div class="card-header">
-            <h2>My Profile</h2>
-          </div>
-          <div class="card-body" style="padding:1.25rem 1.5rem;">
-            <div id="profile-error" class="alert alert-error" style="display:none"></div>
-            <div id="profile-success" class="alert alert-success" style="display:none"></div>
-            <div class="form-row">
-              <div class="form-group"><label>Username</label><input id="profile-username" disabled></div>
-              <div class="form-group"><label>Role</label><input id="profile-role" disabled></div>
-            </div>
-            <div class="form-row">
-              <div class="form-group"><label>Email</label><input id="profile-email" type="email"></div>
-              <div class="form-group"><label>Phone</label><input id="profile-phone"></div>
-            </div>
-            <div class="form-row">
-              <div class="form-group"><label>First Name</label><input id="profile-first-name"></div>
-              <div class="form-group"><label>Last Name</label><input id="profile-last-name"></div>
-            </div>
-            <div class="form-row">
-              <div class="form-group"><label>Current Password</label><input id="profile-current-password" type="password" autocomplete="current-password"></div>
-              <div class="form-group"><label>New Password</label><input id="profile-new-password" type="password" autocomplete="new-password" minlength="6"></div>
-            </div>
-            <div style="display:flex; justify-content:flex-end; gap:.5rem;">
-              <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
@@ -797,42 +685,6 @@ let token = localStorage.getItem('sms_token') || null;
 let currentUser = JSON.parse(localStorage.getItem('sms_user') || 'null');
 let currentPage = 'dashboard';
 let tableData = {};
-
-const ROLE_PAGES = {
-  admin: ['dashboard', 'students', 'teachers', 'activities', 'rooms', 'bookings', 'users', 'profile'],
-  teacher: ['teacher-portal', 'bookings', 'profile'],
-  student: ['student-portal', 'activities', 'profile']
-};
-
-function getRole() {
-  return currentUser?.role || 'student';
-}
-
-function canAccessPage(page) {
-  const role = getRole();
-  const allowed = ROLE_PAGES[role] || [];
-  return allowed.includes(page);
-}
-
-function defaultPageForRole() {
-  const role = getRole();
-  if (role === 'admin') return 'dashboard';
-  if (role === 'teacher') return 'teacher-portal';
-  return 'student-portal';
-}
-
-function applyRoleUI() {
-  const role = getRole();
-  const logoSubtitle = document.querySelector('.sidebar-logo p');
-  if (logoSubtitle) {
-    logoSubtitle.textContent = role === 'admin' ? 'Admin Dashboard' : role === 'teacher' ? 'Teacher Portal' : 'Student Portal';
-  }
-
-  document.querySelectorAll('.nav-item, .nav-section').forEach(el => {
-    const roles = (el.getAttribute('data-roles') || 'admin,teacher,student').split(',').map(r => r.trim());
-    el.style.display = roles.includes(role) ? '' : 'none';
-  });
-}
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -867,95 +719,19 @@ async function doLogin(e) {
 
 async function doRegister(e) {
   e.preventDefault();
-  const firstName = document.getElementById('reg-first-name').value.trim();
-  const lastName = document.getElementById('reg-last-name').value.trim();
   const username = document.getElementById('reg-username').value.trim();
   const email = document.getElementById('reg-email').value.trim();
   const password = document.getElementById('reg-password').value;
-  const phone = document.getElementById('reg-phone').value.trim();
-  
-  if (!firstName || !lastName || !username || !email || !password) {
-    showAuthError('All required fields including username must be filled');
-    return;
-  }
-  
-  if (username.length < 3 || username.length > 20) {
-    showAuthError('Username must be 3-20 characters');
-    return;
-  }
-  
-  if (!/^[a-zA-Z0-9._-]+$/.test(username)) {
-    showAuthError('Username can only contain letters, numbers, dots, hyphens, and underscores');
-    return;
-  }
-  
+  const role = document.getElementById('reg-role').value;
   try {
-    const data = await apiCall('/api/auth/register/student', 'POST', { 
-      firstName, lastName, email, password, phone, username
-    }, false);
-    
-    if (!data || !data.token) {
-      console.error('Registration response:', data);
-      throw new Error('Registration failed: server did not return a valid token');
-    }
-    
+    const data = await apiCall('/api/auth/register', 'POST', { username, email, password, role }, false);
     token = data.token;
     currentUser = data.user;
     localStorage.setItem('sms_token', token);
     localStorage.setItem('sms_user', JSON.stringify(currentUser));
     showApp();
   } catch(err) {
-    console.error('Registration error:', err);
     showAuthError(err.message || 'Registration failed');
-  }
-}
-
-async function checkUsernameAvailability() {
-  const username = (document.getElementById('reg-username')?.value || '').trim();
-  const statusEl = document.getElementById('username-status');
-  const errorEl = document.getElementById('username-error');
-  
-  if (!username) {
-    statusEl.textContent = '';
-    errorEl.style.display = 'none';
-    return;
-  }
-  
-  if (username.length < 3) {
-    statusEl.textContent = '❌';
-    errorEl.textContent = 'Username must be at least 3 characters';
-    errorEl.style.display = 'block';
-    return;
-  }
-  
-  if (username.length > 20) {
-    statusEl.textContent = '❌';
-    errorEl.textContent = 'Username cannot exceed 20 characters';
-    errorEl.style.display = 'block';
-    return;
-  }
-  
-  if (!/^[a-zA-Z0-9._-]+$/.test(username)) {
-    statusEl.textContent = '❌';
-    errorEl.textContent = 'Only letters, numbers, dots, hyphens, underscores allowed';
-    errorEl.style.display = 'block';
-    return;
-  }
-  
-  try {
-    const result = await apiCall('/api/auth/check-username/' + encodeURIComponent(username), 'GET', null, false);
-    if (result.available) {
-      statusEl.textContent = '✅';
-      errorEl.style.display = 'none';
-    } else {
-      statusEl.textContent = '❌';
-      errorEl.textContent = 'Username already taken';
-      errorEl.style.display = 'block';
-    }
-  } catch (err) {
-    statusEl.textContent = '❓';
-    errorEl.textContent = 'Could not check availability';
-    errorEl.style.display = 'block';
   }
 }
 
@@ -969,11 +745,10 @@ function showApp() {
   document.getElementById('auth-screen').style.display = 'none';
   const app = document.getElementById('app');
   app.classList.add('visible');
-  applyRoleUI();
   document.getElementById('user-name').textContent = currentUser?.username || 'User';
   document.getElementById('user-role').textContent = currentUser?.role || 'admin';
   document.getElementById('user-avatar').textContent = (currentUser?.username || 'U')[0].toUpperCase();
-  navigate(defaultPageForRole());
+  navigate('dashboard');
 }
 
 function logout() {
@@ -987,39 +762,17 @@ function logout() {
 
 // ===== NAVIGATION =====
 function navigate(page) {
-  if (!canAccessPage(page)) {
-    showToast('You do not have access to this page', 'error');
-    page = defaultPageForRole();
-  }
-
-  const pageEl = document.getElementById('page-' + page);
-  if (!pageEl) {
-    page = defaultPageForRole();
-  }
-
   currentPage = page;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
-  const navItem = document.querySelector('[data-page="' + page + '"]');
-  if (navItem) navItem.classList.add('active');
-  const titles = {
-    dashboard:'Dashboard',
-    students:'Students',
-    teachers:'Teachers',
-    activities:'Activities',
-    rooms:'Rooms',
-    bookings:'Bookings',
-    'teacher-portal':'My Teaching',
-    'student-portal':'My Learning',
-    users:'Users',
-    profile:'Profile'
-  };
+  document.querySelector('[data-page="' + page + '"]').classList.add('active');
+  const titles = { dashboard:'Dashboard', students:'Students', teachers:'Teachers', activities:'Activities', rooms:'Rooms', bookings:'Bookings' };
   document.getElementById('page-title').textContent = titles[page] || page;
 
    const topbarCenter = document.getElementById('topbar-center');
    if (topbarCenter) {
-    topbarCenter.style.display = (page === 'dashboard' && getRole() === 'admin') ? 'flex' : 'none';
+    topbarCenter.style.display = page === 'dashboard' ? 'flex' : 'none';
    }
 
   loadPage(page);
@@ -1087,10 +840,6 @@ function loadPage(page) {
   else if (page === 'activities') loadActivities();
   else if (page === 'rooms') loadRooms();
   else if (page === 'bookings') loadBookings();
-  else if (page === 'teacher-portal') loadTeacherPortal();
-  else if (page === 'student-portal') loadStudentPortal();
-  else if (page === 'users') loadUsers();
-  else if (page === 'profile') loadProfile();
 }
 
 // ===== API =====
@@ -1960,7 +1709,7 @@ async function saveBulkEnrollment() {
 }
 
 const CSV_CONFIG = {
-  students: { endpoint: '/api/students', fields: ['first_name', 'last_name', 'email', 'phone', 'address', 'enrollment_date', 'status'] },
+  students: { endpoint: '/api/students', fields: ['first_name', 'last_name', 'email', 'phone', 'address', 'date_of_birth', 'enrollment_date', 'status'] },
   teachers: { endpoint: '/api/teachers', fields: ['first_name', 'last_name', 'email', 'phone', 'specialization', 'hire_date', 'status'] },
   activities: { endpoint: '/api/activities', fields: ['name', 'description', 'teacher_id', 'room_id', 'capacity', 'start_date', 'end_date', 'schedule', 'status'] },
   rooms: { endpoint: '/api/rooms', fields: ['name', 'capacity', 'room_type', 'location', 'equipment', 'status'] },
@@ -2126,8 +1875,11 @@ function openStudentModal(s) {
           <div class="form-group"><label>Email *</label><input id="m-email" type="email" value="${esc(s?.email||'')}" required></div>
           <div class="form-row">
             <div class="form-group"><label>Phone</label><input id="m-phone" value="${esc(s?.phone||'')}"></div>
-            <div class="form-group"><label>Enrollment Date</label><input id="m-enroll" type="date" value="${s?.enrollment_date?s.enrollment_date.substring(0,10):''}"></div>
+            <div class="form-group"><label>Date of Birth</label><input id="m-dob" type="date" value="${s?.date_of_birth?s.date_of_birth.substring(0,10):''}"></div>
           </div>
+          <div class="form-row">
+            <div class="form-group"><label>Enrollment Date</label><input id="m-enroll" type="date" value="${s?.enrollment_date?s.enrollment_date.substring(0,10):''}"></div>
+            <div class="form-group"><label>Status</label>
               <select id="m-status">
                 <option value="active" ${s?.status==='active'?'selected':''}>Active</option>
                 <option value="inactive" ${s?.status==='inactive'?'selected':''}>Inactive</option>
@@ -2151,6 +1903,7 @@ async function saveStudent(id) {
     last_name: document.getElementById('m-lname').value.trim(),
     email: document.getElementById('m-email').value.trim(),
     phone: document.getElementById('m-phone').value.trim(),
+    date_of_birth: document.getElementById('m-dob').value || null,
     enrollment_date: document.getElementById('m-enroll').value || null,
     status: document.getElementById('m-status').value,
     address: document.getElementById('m-address').value.trim(),
@@ -2743,479 +2496,6 @@ async function deleteBooking(id) {
     showToast('Booking deleted', 'info');
     loadBookings();
   } catch(err) { showToast(err.message, 'error'); }
-}
-
-// =====================
-//   TEACHER PORTAL
-// =====================
-async function loadTeacherPortal() {
-  const activitiesEl = document.getElementById('teacher-portal-activities');
-  const scheduleEl = document.getElementById('teacher-portal-schedule');
-  if (!activitiesEl || !scheduleEl) return;
-
-  activitiesEl.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-  scheduleEl.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-
-  try {
-    const [teachers, activities, bookings, rooms] = await Promise.all([
-      apiCall('/api/teachers'),
-      apiCall('/api/activities'),
-      apiCall('/api/bookings'),
-      apiCall('/api/rooms')
-    ]);
-
-    let teacherId = currentUser?.teacher?.id || null;
-    if (!teacherId && currentUser?.email) {
-      const matchedTeacher = teachers.find(t => String(t.email).toLowerCase() === String(currentUser.email).toLowerCase());
-      teacherId = matchedTeacher?.id || null;
-    }
-
-    if (!teacherId) {
-      activitiesEl.innerHTML = '<div class="empty-state"><div class="icon">👩‍🏫</div><p>No linked teacher profile found for this account.</p></div>';
-      scheduleEl.innerHTML = '<div class="empty-state"><div class="icon">📅</div><p>No schedule available.</p></div>';
-      return;
-    }
-
-    const myActivities = activities.filter(a => a.teacher_id === teacherId);
-    const myActivityIds = new Set(myActivities.map(a => a.id));
-    const myBookings = bookings
-      .filter(b => myActivityIds.has(b.activity_id))
-      .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
-
-    activitiesEl.innerHTML = myActivities.length
-      ? myActivities.map(a => `
-          <div class="teacher-activity-card">
-            <div class="teacher-activity-title">${esc(a.name)}</div>
-            <div class="teacher-activity-room">${esc(a.description || 'No description')}</div>
-            <div style="font-size:0.8rem;color:var(--text-muted);">Capacity: ${a.capacity || '—'} • Status: ${esc(a.status || 'active')}</div>
-          </div>
-        `).join('')
-      : '<div class="empty-state"><div class="icon">📚</div><p>No activities assigned to you yet.</p></div>';
-
-    scheduleEl.innerHTML = myBookings.length
-      ? `
-        <table>
-          <thead><tr><th>Activity</th><th>Room</th><th>Start</th><th>End</th><th>Status</th></tr></thead>
-          <tbody>
-            ${myBookings.map(b => {
-              const activity = myActivities.find(a => a.id === b.activity_id);
-              const room = rooms.find(r => r.id === b.room_id);
-              return `
-                <tr>
-                  <td><strong>${esc(activity?.name || b.title || 'Activity')}</strong></td>
-                  <td>${esc(room?.name || 'Room #' + b.room_id)}</td>
-                  <td>${fmtDateTime(b.start_time)}</td>
-                  <td>${fmtDateTime(b.end_time)}</td>
-                  <td>${statusBadge(b.status)}</td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-      `
-      : '<div class="empty-state"><div class="icon">🗓️</div><p>No scheduled sessions yet.</p></div>';
-  } catch (err) {
-    activitiesEl.innerHTML = `<div class="alert alert-error" style="margin:0">${esc(err.message)}</div>`;
-    scheduleEl.innerHTML = `<div class="alert alert-error" style="margin:0">${esc(err.message)}</div>`;
-  }
-}
-
-// =====================
-//   STUDENT PORTAL
-// =====================
-async function loadStudentPortal() {
-  const activitiesEl = document.getElementById('student-portal-activities');
-  const enrollmentsEl = document.getElementById('student-portal-enrollments');
-  if (!activitiesEl || !enrollmentsEl) return;
-
-  activitiesEl.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-  enrollmentsEl.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-
-  try {
-    const [students, activities, enrollments] = await Promise.all([
-      apiCall('/api/students'),
-      apiCall('/api/activities/with-enrollment'),
-      apiCall('/api/enrollments')
-    ]);
-
-    let studentId = currentUser?.student?.id || null;
-    if (!studentId && currentUser?.email) {
-      const matchedStudent = students.find(s => String(s.email).toLowerCase() === String(currentUser.email).toLowerCase());
-      studentId = matchedStudent?.id || null;
-    }
-
-    if (!studentId) {
-      activitiesEl.innerHTML = '<div class="empty-state"><div class="icon">🎒</div><p>No linked student profile found for this account.</p></div>';
-      enrollmentsEl.innerHTML = '<div class="empty-state"><div class="icon">🎓</div><p>No enrollment data available.</p></div>';
-      return;
-    }
-
-    const myEnrollments = enrollments.filter(e => e.student_id === studentId);
-    const enrolledIds = new Set(myEnrollments.map(e => e.activity_id));
-
-    activitiesEl.innerHTML = activities.length
-      ? activities.map(a => {
-          const alreadyEnrolled = enrolledIds.has(a.id);
-          const full = (a.enrolled_count || 0) >= (a.capacity || 0);
-          const activityData = JSON.stringify(JSON.stringify(a));
-          return `
-            <div class="activity-card" style="margin-bottom:.75rem;cursor:pointer;border:2px solid var(--border);" onclick="event.stopPropagation(); showActivityDetail('${activityData.replace(/'/g, "\\'")}','${a.id}')">
-              <div class="activity-card-header">
-                <div class="activity-icon">📚</div>
-                <div class="activity-info" style="flex:1;">
-                  <div class="activity-name">${esc(a.name)}</div>
-                  <div class="activity-details">${esc((a.description || 'No description').substring(0, 80))}</div>
-                  <div class="activity-capacity">Capacity: ${a.enrolled_count || 0}/${a.capacity || '—'}</div>
-                </div>
-                <div style="display:flex;gap:0.5rem;align-items:center;">
-                  <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); ${alreadyEnrolled ? `dropMyEnrollment(${a.id})` : `enrollCurrentStudent(${a.id})`}">  
-                    ${alreadyEnrolled ? 'Drop' : (full ? 'Full' : 'Enroll')}
-                  </button>
-                  <span style="font-size:1.2rem;cursor:pointer;opacity:0.6;">→</span>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('')
-      : '<div class="empty-state"><div class="icon">📚</div><p>No activities available.</p></div>';
-
-    enrollmentsEl.innerHTML = myEnrollments.length
-      ? myEnrollments.map(e => {
-          const activity = activities.find(a => a.id === e.activity_id);
-          return `
-            <div class="enrollment-card">
-              <div class="enrollment-header">
-                <div class="enrollment-icon">🎓</div>
-                <div class="enrollment-info">
-                  <div class="enrollment-title">${esc(activity?.name || 'Activity')}</div>
-                  <div class="enrollment-meta">Status: ${esc(e.status || 'enrolled')} ${e.enrollment_date ? `• ${fmtDate(e.enrollment_date)}` : ''}</div>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('')
-      : '<div class="empty-state"><div class="icon">🎓</div><p>You are not enrolled in any activities yet.</p></div>';
-  } catch (err) {
-    activitiesEl.innerHTML = `<div class="alert alert-error" style="margin:0">${esc(err.message)}</div>`;
-    enrollmentsEl.innerHTML = `<div class="alert alert-error" style="margin:0">${esc(err.message)}</div>`;
-  }
-}
-
-async function enrollCurrentStudent(activityId) {
-  try {
-    const studentId = currentUser?.student?.id;
-    if (!studentId) throw new Error('Your account is not linked to a student profile');
-    await apiCall('/api/activities/' + activityId + '/enroll', 'POST', { student_id: studentId });
-    showToast('Enrolled successfully');
-    loadStudentPortal();
-  } catch (err) {
-    showToast(err.message, 'error');
-  }
-}
-
-async function dropMyEnrollment(activityId) {
-  try {
-    const studentId = currentUser?.student?.id;
-    if (!studentId) throw new Error('Your account is not linked to a student profile');
-    await apiCall('/api/activities/' + activityId + '/enroll/' + studentId, 'DELETE');
-    showToast('Enrollment dropped', 'info');
-    loadStudentPortal();
-  } catch (err) {
-    showToast(err.message, 'error');
-  }
-}
-
-function showActivityDetail(activityJson, activityId) {
-  let activity = {};
-  try {
-    activity = JSON.parse(JSON.parse(activityJson));
-  } catch (e) {
-    showToast('Error loading activity details', 'error');
-    return;
-  }
-
-  const isFull = (activity.enrolled_count || 0) >= (activity.capacity || 0);
-
-  openModal(`
-    <div class="modal-overlay">
-      <div class="modal modal-lg">
-        <div class="modal-header">
-          <h3>${esc(activity.name || 'Activity')}</h3>
-          <button class="modal-close" onclick="closeModal()">✕</button>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>Description</label>
-            <p style="line-height:1.5;color:var(--text);">${esc(activity.description || 'No description available')}</p>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Capacity</label>
-              <p>${activity.enrolled_count || 0} / ${activity.capacity || '—'} enrolled</p>
-            </div>
-            <div class="form-group">
-              <label>Schedule</label>
-              <p>${esc(activity.schedule || 'Not specified')}</p>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Status</label>
-              <p>${statusBadge(activity.status || 'active')}</p>
-            </div>
-            <div class="form-group">
-              <label>Duration</label>
-              <p>${activity.start_date ? fmtDate(activity.start_date) : '—'} to ${activity.end_date ? fmtDate(activity.end_date) : '—'}</p>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-ghost" onclick="closeModal()">Close</button>
-          <button class="btn btn-accent" ${isFull ? 'disabled' : ''} onclick="enrollCurrentStudent(${activityId}); closeModal();">Enroll Now</button>
-        </div>
-      </div>
-    </div>
-  `);
-}
-
-// =====================
-//   USERS (ADMIN)
-// =====================
-async function loadUsers() {
-  const usersEl = document.getElementById('users-table');
-  if (!usersEl) return;
-  usersEl.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-
-  try {
-    const users = await apiCall('/api/auth/users');
-    usersEl.innerHTML = users.length ? `
-      <table>
-        <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Status</th><th>Related ID</th><th>Created</th></tr></thead>
-        <tbody>
-          ${users.map(u => `
-            <tr>
-              <td><strong>${esc(u.username)}</strong></td>
-              <td>${esc(u.email)}</td>
-              <td>${statusBadge(u.role)}</td>
-              <td>${statusBadge(u.status)}</td>
-              <td>${u.related_id || '—'}</td>
-              <td>${fmtDateTime(u.created_at)}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    ` : '<div class="empty-state"><div class="icon">👥</div><p>No users found.</p></div>';
-  } catch (err) {
-    usersEl.innerHTML = `<div class="alert alert-error" style="margin:0">${esc(err.message)}</div>`;
-  }
-}
-
-async function openCreateUserModal() {
-  try {
-    const [teachers, students] = await Promise.all([
-      apiCall('/api/teachers'),
-      apiCall('/api/students')
-    ]);
-
-    const teacherOpts = '<option value="">— Select teacher —</option>' + teachers.map(t => `<option value="${t.id}">${esc(t.first_name + ' ' + t.last_name)} (#${t.id})</option>`).join('');
-    const studentOpts = '<option value="">— Select student —</option>' + students.map(s => `<option value="${s.id}">${esc(s.first_name + ' ' + s.last_name)} (#${s.id})</option>`).join('');
-
-    openModal(`
-      <div class="modal-overlay">
-        <div class="modal">
-          <div class="modal-header">
-            <h3>Create User Account</h3>
-            <button class="modal-close" onclick="closeModal()">✕</button>
-          </div>
-          <div class="modal-body">
-            <div id="modal-error" class="alert alert-error" style="display:none"></div>
-            <div class="form-group"><label>Username *</label><input id="u-username"></div>
-            <div class="form-group"><label>Email *</label><input id="u-email" type="email"></div>
-            <div class="form-group"><label>Password *</label><input id="u-password" type="password" minlength="6"></div>
-            <div class="form-group"><label>Role *</label>
-              <select id="u-role" onchange="toggleRelatedSelect()">
-                <option value="admin">Admin</option>
-                <option value="teacher">Teacher</option>
-                <option value="student">Student</option>
-              </select>
-            </div>
-            <div class="form-group" id="u-related-teacher-wrap" style="display:none">
-              <label>Linked Teacher</label>
-              <select id="u-related-teacher">${teacherOpts}</select>
-            </div>
-            <div class="form-group" id="u-related-student-wrap" style="display:none">
-              <label>Linked Student</label>
-              <select id="u-related-student">${studentOpts}</select>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="createUser()">Create User</button>
-          </div>
-        </div>
-      </div>
-    `);
-  } catch (err) {
-    showToast(err.message, 'error');
-  }
-}
-
-function toggleRelatedSelect() {
-  const role = document.getElementById('u-role')?.value;
-  const teacherWrap = document.getElementById('u-related-teacher-wrap');
-  const studentWrap = document.getElementById('u-related-student-wrap');
-  if (!teacherWrap || !studentWrap) return;
-
-  teacherWrap.style.display = role === 'teacher' ? '' : 'none';
-  studentWrap.style.display = role === 'student' ? '' : 'none';
-}
-
-async function createUser() {
-  const role = document.getElementById('u-role').value;
-  const body = {
-    username: document.getElementById('u-username').value.trim(),
-    email: document.getElementById('u-email').value.trim(),
-    password: document.getElementById('u-password').value,
-    role,
-    relatedId: role === 'teacher'
-      ? parseInt(document.getElementById('u-related-teacher').value) || null
-      : role === 'student'
-      ? parseInt(document.getElementById('u-related-student').value) || null
-      : null
-  };
-
-  if (!body.username || !body.email || !body.password || !body.role) {
-    document.getElementById('modal-error').textContent = 'Username, email, password, and role are required.';
-    document.getElementById('modal-error').style.display = '';
-    return;
-  }
-
-  try {
-    await apiCall('/api/auth/users', 'POST', body);
-    closeModal();
-    showToast('User created');
-    loadUsers();
-  } catch (err) {
-    document.getElementById('modal-error').textContent = err.message;
-    document.getElementById('modal-error').style.display = '';
-  }
-}
-
-// =====================
-//   PROFILE
-// =====================
-async function loadProfile() {
-  const role = getRole();
-  document.getElementById('profile-error').style.display = 'none';
-  document.getElementById('profile-success').style.display = 'none';
-  document.getElementById('profile-username').value = currentUser?.username || '';
-  document.getElementById('profile-role').value = role;
-
-  let email = currentUser?.email || '';
-  let phone = '';
-  let firstName = '';
-  let lastName = '';
-
-  try {
-    if (role === 'teacher' && currentUser?.teacher?.id) {
-      const teachers = await apiCall('/api/teachers');
-      const teacher = teachers.find(t => t.id === currentUser.teacher.id);
-      if (teacher) {
-        email = teacher.email || email;
-        phone = teacher.phone || '';
-        firstName = teacher.first_name || '';
-        lastName = teacher.last_name || '';
-      }
-    } else if (role === 'student' && currentUser?.student?.id) {
-      const students = await apiCall('/api/students');
-      const student = students.find(s => s.id === currentUser.student.id);
-      if (student) {
-        email = student.email || email;
-        phone = student.phone || '';
-        firstName = student.first_name || '';
-        lastName = student.last_name || '';
-      }
-    }
-  } catch (err) {
-    const errorEl = document.getElementById('profile-error');
-    errorEl.textContent = err.message;
-    errorEl.style.display = '';
-  }
-
-  document.getElementById('profile-email').value = email;
-  document.getElementById('profile-phone').value = phone;
-  document.getElementById('profile-first-name').value = firstName;
-  document.getElementById('profile-last-name').value = lastName;
-}
-
-async function saveProfile() {
-  const role = getRole();
-  const errorEl = document.getElementById('profile-error');
-  const successEl = document.getElementById('profile-success');
-  errorEl.style.display = 'none';
-  successEl.style.display = 'none';
-
-  const email = document.getElementById('profile-email').value.trim();
-  const phone = document.getElementById('profile-phone').value.trim();
-  const firstName = document.getElementById('profile-first-name').value.trim();
-  const lastName = document.getElementById('profile-last-name').value.trim();
-  const currentPassword = document.getElementById('profile-current-password').value;
-  const newPassword = document.getElementById('profile-new-password').value;
-
-  try {
-    if (role === 'teacher' && currentUser?.teacher?.id) {
-      const teachers = await apiCall('/api/teachers');
-      const existing = teachers.find(t => t.id === currentUser.teacher.id);
-      if (existing) {
-        await apiCall('/api/teachers/' + existing.id, 'PUT', {
-          first_name: firstName || existing.first_name,
-          last_name: lastName || existing.last_name,
-          email: email || existing.email,
-          phone,
-          hire_date: existing.hire_date || null,
-          specialization: existing.specialization || '',
-          status: existing.status || 'active'
-        });
-      }
-    }
-
-    if (role === 'student' && currentUser?.student?.id) {
-      const students = await apiCall('/api/students');
-      const existing = students.find(s => s.id === currentUser.student.id);
-      if (existing) {
-        await apiCall('/api/students/' + existing.id, 'PUT', {
-          first_name: firstName || existing.first_name,
-          last_name: lastName || existing.last_name,
-          email: email || existing.email,
-          phone,
-          address: existing.address || '',
-          enrollment_date: existing.enrollment_date || null,
-          status: existing.status || 'active'
-        });
-      }
-    }
-
-    if (newPassword) {
-      if (!currentPassword) throw new Error('Current password is required to set a new password');
-      await apiCall('/api/auth/change-password', 'POST', {
-        currentPassword,
-        newPassword
-      });
-      document.getElementById('profile-current-password').value = '';
-      document.getElementById('profile-new-password').value = '';
-    }
-
-    if (email) {
-      currentUser.email = email;
-      localStorage.setItem('sms_user', JSON.stringify(currentUser));
-    }
-
-    successEl.textContent = 'Profile updated successfully';
-    successEl.style.display = '';
-  } catch (err) {
-    errorEl.textContent = err.message;
-    errorEl.style.display = '';
-  }
 }
 
 // ===== UTIL =====
