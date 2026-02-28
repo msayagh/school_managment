@@ -3,234 +3,1301 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>School Management System</title>
+  <title>School Management System — Admin</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f0f2f5;
-      color: #333;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #1a237e;
+      --primary-light: #3949ab;
+      --accent: #ff6f00;
+      --danger: #c62828;
+      --success: #2e7d32;
+      --warning: #f57f17;
+      --bg: #f5f6fa;
+      --card: #fff;
+      --border: #e0e0e0;
+      --text: #212121;
+      --text-muted: #757575;
+      --sidebar-width: 220px;
     }
-    header {
-      background: #1a237e;
-      color: white;
-      padding: 1rem 2rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ===== AUTH SCREEN ===== */
+    #auth-screen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
     }
-    header h1 { font-size: 1.5rem; }
-    .badge {
-      background: #ff6f00;
-      color: white;
-      padding: 0.2rem 0.6rem;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: bold;
+    .auth-box {
+      background: white; border-radius: 12px; padding: 2.5rem; width: 100%; max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     }
-    main {
-      flex: 1;
-      max-width: 1000px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-      width: 100%;
+    .auth-logo { text-align: center; margin-bottom: 1.5rem; }
+    .auth-logo h1 { color: var(--primary); font-size: 1.6rem; }
+    .auth-logo p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem; }
+    .tab-bar { display: flex; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .tab-btn {
+      flex: 1; padding: 0.6rem; background: none; border: none; cursor: pointer;
+      font-size: 0.95rem; color: var(--text-muted); font-weight: 500;
+      border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;
     }
-    .hero {
-      background: white;
-      border-radius: 8px;
-      padding: 2rem;
-      text-align: center;
-      margin-bottom: 2rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.3rem; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 0.65rem 0.9rem; border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 0.95rem; transition: border-color 0.2s; outline: none; font-family: inherit;
     }
-    .hero h2 { font-size: 2rem; color: #1a237e; margin-bottom: 0.5rem; }
-    .hero p { color: #666; margin-bottom: 1.5rem; }
-    .api-status {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: #e8f5e9;
-      color: #2e7d32;
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-size: 0.9rem;
-      font-weight: 500;
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary-light); }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.2rem;
+      border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
+      transition: all 0.2s; text-decoration: none;
     }
-    .dot {
-      width: 8px; height: 8px;
-      background: #4caf50;
-      border-radius: 50%;
-      animation: pulse 2s infinite;
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-light); }
+    .btn-accent { background: var(--accent); color: white; }
+    .btn-accent:hover { background: #e65c00; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { background: #b71c1c; }
+    .btn-ghost { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+    .btn-ghost:hover { background: var(--bg); }
+    .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+    .btn-full { width: 100%; justify-content: center; }
+    .alert { padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.875rem; margin-bottom: 1rem; }
+    .alert-error { background: #ffebee; color: var(--danger); border: 1px solid #ffcdd2; }
+    .alert-success { background: #e8f5e9; color: var(--success); border: 1px solid #c8e6c9; }
+
+    /* ===== APP LAYOUT ===== */
+    #app { display: none; min-height: 100vh; }
+    #app.visible { display: flex; }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: var(--sidebar-width); background: var(--primary); color: white;
+      display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0;
+      overflow-y: auto;
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+    .sidebar-logo { padding: 1.25rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.15); }
+    .sidebar-logo h2 { font-size: 1rem; font-weight: 700; }
+    .sidebar-logo p { font-size: 0.75rem; opacity: 0.7; margin-top: 0.15rem; }
+    .sidebar-nav { flex: 1; padding: 0.75rem 0; }
+    .nav-section { padding: 0.75rem 1.2rem 0.3rem; font-size: 0.7rem; font-weight: 700; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.1em; }
+    .nav-item {
+      display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 1.2rem;
+      cursor: pointer; font-size: 0.9rem; opacity: 0.8; transition: all 0.15s;
+      text-decoration: none; color: white; border-left: 3px solid transparent;
     }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
+    .nav-item:hover { opacity: 1; background: rgba(255,255,255,0.08); }
+    .nav-item.active { opacity: 1; background: rgba(255,255,255,0.15); border-left-color: white; }
+    .nav-icon { font-size: 1.1rem; width: 1.4rem; text-align: center; }
+    .sidebar-footer { padding: 1rem 1.2rem; border-top: 1px solid rgba(255,255,255,0.15); font-size: 0.8rem; opacity: 0.7; }
+    .sidebar-user { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 700; }
+    .logout-btn { width: 100%; padding: 0.4rem; background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: background 0.2s; }
+    .logout-btn:hover { background: rgba(255,255,255,0.2); }
+
+    /* ===== MAIN CONTENT ===== */
+    .main { margin-left: var(--sidebar-width); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar {
+      background: white; padding: 0.9rem 1.75rem; display: flex; align-items: center;
+      justify-content: space-between; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10;
     }
-    .card {
-      background: white;
-      border-radius: 8px;
-      padding: 1.5rem;
-      text-align: center;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      text-decoration: none;
-      color: inherit;
-      transition: transform 0.2s, box-shadow 0.2s;
-      cursor: pointer;
+    .topbar h1 { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
+    .topbar-actions { display: flex; align-items: center; gap: 0.75rem; }
+    .content { padding: 1.75rem; flex: 1; }
+
+    /* ===== PAGE ===== */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ===== DASHBOARD ===== */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 1.75rem; }
+    .stat-card {
+      background: white; border-radius: 12px; padding: 1.25rem 1.5rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07); display: flex; align-items: center; gap: 1rem;
     }
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    .stat-icon { font-size: 2rem; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; border-radius: 10px; }
+    .stat-info { flex: 1; }
+    .stat-value { font-size: 1.8rem; font-weight: 700; line-height: 1; color: var(--primary); }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+    /* ===== TABLES ===== */
+    .card { background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); overflow: hidden; }
+    .card-header { padding: 1.1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+    .card-header h2 { font-size: 1rem; font-weight: 700; }
+    .card-body { padding: 0; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th { background: var(--bg); padding: 0.7rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+    td { padding: 0.75rem 1rem; border-bottom: 1px solid #f5f5f5; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+    .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .badge-green { background: #e8f5e9; color: var(--success); }
+    .badge-red { background: #ffebee; color: var(--danger); }
+    .badge-orange { background: #fff3e0; color: var(--warning); }
+    .badge-blue { background: #e3f2fd; color: #1565c0; }
+    .badge-grey { background: #f5f5f5; color: #757575; }
+    .actions { display: flex; gap: 0.4rem; flex-wrap: nowrap; }
+    .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 0.75rem; }
+    .search-bar { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .search-bar input { flex: 1; min-width: 200px; padding: 0.6rem 0.9rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: 0.9rem; outline: none; }
+    .search-bar input:focus { border-color: var(--primary-light); }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex;
+      align-items: center; justify-content: center; z-index: 1000; padding: 1rem;
     }
-    .card .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
-    .card h3 { font-size: 1rem; color: #1a237e; margin-bottom: 0.25rem; }
-    .card p { font-size: 0.8rem; color: #888; }
-    .api-section {
-      background: white;
-      border-radius: 8px;
-      padding: 1.5rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    .modal { background: white; border-radius: 12px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .modal-lg { max-width: 700px; }
+    .modal-header { padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: white; }
+    .modal-header h3 { font-size: 1.05rem; font-weight: 700; }
+    .modal-close { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--text-muted); line-height: 1; }
+    .modal-body { padding: 1.5rem; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.75rem; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    /* ===== TOAST ===== */
+    #toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 2000;
+      padding: 0.75rem 1.25rem; border-radius: 10px; font-size: 0.9rem; font-weight: 500;
+      color: white; min-width: 220px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      transform: translateY(0); transition: all 0.3s; opacity: 1;
     }
-    .api-section h3 { color: #1a237e; margin-bottom: 1rem; }
-    .endpoint-list { list-style: none; }
-    .endpoint-list li {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.5rem 0;
-      border-bottom: 1px solid #f0f0f0;
-      font-size: 0.9rem;
-    }
-    .endpoint-list li:last-child { border-bottom: none; }
-    .method {
-      font-size: 0.75rem;
-      font-weight: bold;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      min-width: 50px;
-      text-align: center;
-    }
-    .get { background: #e3f2fd; color: #1565c0; }
-    .post { background: #e8f5e9; color: #2e7d32; }
-    footer {
-      background: #1a237e;
-      color: rgba(255,255,255,0.7);
-      text-align: center;
-      padding: 1rem;
-      font-size: 0.85rem;
+    #toast.hide { opacity: 0; transform: translateY(20px); pointer-events: none; }
+    #toast.success { background: var(--success); }
+    #toast.error { background: var(--danger); }
+    #toast.info { background: var(--primary-light); }
+
+    /* ===== LOADING ===== */
+    .loading { display: flex; align-items: center; justify-content: center; padding: 2rem; color: var(--text-muted); gap: 0.5rem; }
+    .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); transition: transform 0.3s; z-index: 100; }
+      .sidebar.open { transform: none; }
+      .main { margin-left: 0; }
+      .form-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🏫 School Management System</h1>
-    <span class="badge">v1.0</span>
-  </header>
 
-  <main>
-    <div class="hero">
-      <h2>Welcome to School Management System</h2>
-      <p>A microservices-based platform for managing school operations</p>
-      <div id="apiStatus" class="api-status">
-        <div class="dot"></div>
-        <span>Checking API status...</span>
-      </div>
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <h1>🏫 School Management</h1>
+      <p>Admin Dashboard</p>
     </div>
-
-    <div class="grid">
-      <div class="card" onclick="navigate('/api/students')">
-        <div class="icon">👨‍🎓</div>
-        <h3>Students</h3>
-        <p>Manage student registrations</p>
-      </div>
-      <div class="card" onclick="navigate('/api/teachers')">
-        <div class="icon">👩‍🏫</div>
-        <h3>Teachers</h3>
-        <p>Manage teacher profiles</p>
-      </div>
-      <div class="card" onclick="navigate('/api/activities')">
-        <div class="icon">📚</div>
-        <h3>Activities</h3>
-        <p>Create and schedule activities</p>
-      </div>
-      <div class="card" onclick="navigate('/api/rooms')">
-        <div class="icon">🏛️</div>
-        <h3>Rooms</h3>
-        <p>Manage school facilities</p>
-      </div>
-      <div class="card" onclick="navigate('/api/bookings')">
-        <div class="icon">📅</div>
-        <h3>Bookings</h3>
-        <p>Room reservations system</p>
-      </div>
-      <div class="card" onclick="navigate('/health')">
-        <div class="icon">⚙️</div>
-        <h3>API Gateway</h3>
-        <p>Check system health</p>
-      </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="showTab('login')">Login</button>
+      <button class="tab-btn" onclick="showTab('register')">Register</button>
     </div>
+    <div id="auth-error" class="alert alert-error" style="display:none"></div>
 
-    <div class="api-section">
-      <h3>Available API Endpoints</h3>
-      <ul class="endpoint-list">
-        <li><span class="method post">POST</span> /api/auth/register — Register a new user</li>
-        <li><span class="method post">POST</span> /api/auth/login — Authenticate and get token</li>
-        <li><span class="method get">GET</span> /api/auth/me — Get current user info</li>
-        <li><span class="method get">GET</span> /api/students — List all students</li>
-        <li><span class="method post">POST</span> /api/students — Register a new student</li>
-        <li><span class="method get">GET</span> /api/teachers — List all teachers</li>
-        <li><span class="method post">POST</span> /api/teachers — Add a new teacher</li>
-        <li><span class="method get">GET</span> /api/activities — List all activities</li>
-        <li><span class="method post">POST</span> /api/activities — Create a new activity</li>
-        <li><span class="method get">GET</span> /api/rooms — List all rooms</li>
-        <li><span class="method post">POST</span> /api/rooms — Add a new room</li>
-        <li><span class="method get">GET</span> /api/bookings — List all bookings</li>
-        <li><span class="method post">POST</span> /api/bookings — Create a booking</li>
-      </ul>
+    <!-- Login Form -->
+    <form id="login-form" onsubmit="doLogin(event)">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="login-username" placeholder="admin" required autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+    </form>
+
+    <!-- Register Form -->
+    <form id="register-form" style="display:none" onsubmit="doRegister(event)">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="reg-username" placeholder="admin" required>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="admin@school.com" required>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="••••••••" required minlength="6">
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="reg-role">
+          <option value="admin">Admin</option>
+          <option value="teacher">Teacher</option>
+          <option value="student">Student</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <h2>🏫 School Mgmt</h2>
+      <p>Admin Dashboard</p>
     </div>
-  </main>
+    <div class="sidebar-nav">
+      <div class="nav-section">Overview</div>
+      <a class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+        <span class="nav-icon">📊</span> Dashboard
+      </a>
+      <div class="nav-section">Management</div>
+      <a class="nav-item" data-page="students" onclick="navigate('students')">
+        <span class="nav-icon">👨‍🎓</span> Students
+      </a>
+      <a class="nav-item" data-page="teachers" onclick="navigate('teachers')">
+        <span class="nav-icon">👩‍��</span> Teachers
+      </a>
+      <a class="nav-item" data-page="activities" onclick="navigate('activities')">
+        <span class="nav-icon">📚</span> Activities
+      </a>
+      <a class="nav-item" data-page="rooms" onclick="navigate('rooms')">
+        <span class="nav-icon">🏛️</span> Rooms
+      </a>
+      <a class="nav-item" data-page="bookings" onclick="navigate('bookings')">
+        <span class="nav-icon">📅</span> Bookings
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="user-avatar">A</div>
+        <div>
+          <div id="user-name" style="font-weight:600">Admin</div>
+          <div id="user-role" style="font-size:0.7rem;opacity:0.7">admin</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="logout()">⏻ Sign Out</button>
+    </div>
+  </nav>
 
-  <footer>
-    <p>School Management System &copy; 2024 — Built with Node.js microservices</p>
-  </footer>
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <h1 id="page-title">Dashboard</h1>
+      <div class="topbar-actions" id="topbar-actions"></div>
+    </div>
+    <div class="content">
 
-  <script>
-    const API_URL = window.location.hostname === 'localhost'
-      ? 'http://localhost:8000'
-      : `${window.location.protocol}//${window.location.hostname}:8000`;
+      <!-- DASHBOARD PAGE -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid" id="stats-grid">
+          <div class="loading"><div class="spinner"></div> Loading stats…</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>Recent Bookings</h2></div>
+          <div class="card-body table-wrap" id="recent-bookings-table">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
 
-    function navigate(path) {
-      window.open(API_URL + path, '_blank');
+      <!-- STUDENTS PAGE -->
+      <div class="page" id="page-students">
+        <div class="search-bar">
+          <input type="text" id="students-search" placeholder="Search by name or email…" oninput="filterTable('students')">
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h2>Students</h2>
+            <button class="btn btn-accent btn-sm" onclick="openStudentModal()">+ Add Student</button>
+          </div>
+          <div class="card-body table-wrap">
+            <div id="students-table"><div class="loading"><div class="spinner"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TEACHERS PAGE -->
+      <div class="page" id="page-teachers">
+        <div class="search-bar">
+          <input type="text" id="teachers-search" placeholder="Search by name or email…" oninput="filterTable('teachers')">
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h2>Teachers</h2>
+            <button class="btn btn-accent btn-sm" onclick="openTeacherModal()">+ Add Teacher</button>
+          </div>
+          <div class="card-body table-wrap">
+            <div id="teachers-table"><div class="loading"><div class="spinner"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVITIES PAGE -->
+      <div class="page" id="page-activities">
+        <div class="search-bar">
+          <input type="text" id="activities-search" placeholder="Search by name…" oninput="filterTable('activities')">
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h2>Activities</h2>
+            <button class="btn btn-accent btn-sm" onclick="openActivityModal()">+ Add Activity</button>
+          </div>
+          <div class="card-body table-wrap">
+            <div id="activities-table"><div class="loading"><div class="spinner"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROOMS PAGE -->
+      <div class="page" id="page-rooms">
+        <div class="search-bar">
+          <input type="text" id="rooms-search" placeholder="Search by name or location…" oninput="filterTable('rooms')">
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h2>Rooms</h2>
+            <button class="btn btn-accent btn-sm" onclick="openRoomModal()">+ Add Room</button>
+          </div>
+          <div class="card-body table-wrap">
+            <div id="rooms-table"><div class="loading"><div class="spinner"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOOKINGS PAGE -->
+      <div class="page" id="page-bookings">
+        <div class="search-bar">
+          <input type="text" id="bookings-search" placeholder="Search by title or room…" oninput="filterTable('bookings')">
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h2>Bookings</h2>
+            <button class="btn btn-accent btn-sm" onclick="openBookingModal()">+ Add Booking</button>
+          </div>
+          <div class="card-body table-wrap">
+            <div id="bookings-table"><div class="loading"><div class="spinner"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- TOAST -->
+<div id="toast" class="hide"></div>
+
+<!-- MODALS will be injected dynamically -->
+<div id="modal-container"></div>
+
+<script>
+// ===== CONFIG =====
+const API = window.location.port === '3000'
+  ? 'http://' + window.location.hostname + ':8000'
+  : '';
+
+// ===== STATE =====
+let token = localStorage.getItem('sms_token') || null;
+let currentUser = JSON.parse(localStorage.getItem('sms_user') || 'null');
+let currentPage = 'dashboard';
+let tableData = {};
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  if (token && currentUser) {
+    showApp();
+  }
+});
+
+// ===== AUTH =====
+function showTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', (i === 0 ? 'login' : 'register') === tab));
+  document.getElementById('login-form').style.display = tab === 'login' ? '' : 'none';
+  document.getElementById('register-form').style.display = tab === 'register' ? '' : 'none';
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+async function doLogin(e) {
+  e.preventDefault();
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  try {
+    const data = await apiCall('/api/auth/login', 'POST', { username, password }, false);
+    token = data.token;
+    currentUser = data.user;
+    localStorage.setItem('sms_token', token);
+    localStorage.setItem('sms_user', JSON.stringify(currentUser));
+    showApp();
+  } catch(err) {
+    showAuthError(err.message || 'Login failed');
+  }
+}
+
+async function doRegister(e) {
+  e.preventDefault();
+  const username = document.getElementById('reg-username').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const role = document.getElementById('reg-role').value;
+  try {
+    const data = await apiCall('/api/auth/register', 'POST', { username, email, password, role }, false);
+    token = data.token;
+    currentUser = data.user;
+    localStorage.setItem('sms_token', token);
+    localStorage.setItem('sms_user', JSON.stringify(currentUser));
+    showApp();
+  } catch(err) {
+    showAuthError(err.message || 'Registration failed');
+  }
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.display = '';
+}
+
+function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  const app = document.getElementById('app');
+  app.classList.add('visible');
+  document.getElementById('user-name').textContent = currentUser?.username || 'User';
+  document.getElementById('user-role').textContent = currentUser?.role || 'admin';
+  document.getElementById('user-avatar').textContent = (currentUser?.username || 'U')[0].toUpperCase();
+  navigate('dashboard');
+}
+
+function logout() {
+  token = null;
+  currentUser = null;
+  localStorage.removeItem('sms_token');
+  localStorage.removeItem('sms_user');
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('auth-screen').style.display = '';
+}
+
+// ===== NAVIGATION =====
+function navigate(page) {
+  currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelector('[data-page="' + page + '"]').classList.add('active');
+  const titles = { dashboard:'Dashboard', students:'Students', teachers:'Teachers', activities:'Activities', rooms:'Rooms', bookings:'Bookings' };
+  document.getElementById('page-title').textContent = titles[page] || page;
+  loadPage(page);
+}
+
+function loadPage(page) {
+  if (page === 'dashboard') loadDashboard();
+  else if (page === 'students') loadStudents();
+  else if (page === 'teachers') loadTeachers();
+  else if (page === 'activities') loadActivities();
+  else if (page === 'rooms') loadRooms();
+  else if (page === 'bookings') loadBookings();
+}
+
+// ===== API =====
+async function apiCall(path, method = 'GET', body = null, auth = true) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' }
+  };
+  if (auth && token) opts.headers['Authorization'] = 'Bearer ' + token;
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    if (res.status === 401) { logout(); return; }
+    throw new Error(data.error || data.message || 'Request failed (' + res.status + ')');
+  }
+  return data;
+}
+
+// ===== TOAST =====
+let toastTimer;
+function showToast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.add('hide'), 3000);
+}
+
+// ===== MODAL =====
+function openModal(html) {
+  const c = document.getElementById('modal-container');
+  c.innerHTML = html;
+  document.querySelector('.modal-overlay')?.addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+}
+function closeModal() {
+  document.getElementById('modal-container').innerHTML = '';
+}
+
+// ===== TABLE FILTER =====
+function filterTable(entity) {
+  const q = document.getElementById(entity + '-search').value.toLowerCase();
+  const rows = document.querySelectorAll('#' + entity + '-table tbody tr');
+  rows.forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+// ===== DATE FORMAT =====
+function fmtDate(d) { return d ? new Date(d).toLocaleDateString() : '—'; }
+function fmtDateTime(d) { return d ? new Date(d).toLocaleString() : '—'; }
+
+// ===== STATUS BADGE =====
+function statusBadge(s) {
+  const map = {
+    active:'badge-green', inactive:'badge-grey', graduated:'badge-blue', on_leave:'badge-orange',
+    available:'badge-green', maintenance:'badge-orange', unavailable:'badge-red',
+    pending:'badge-orange', confirmed:'badge-green', cancelled:'badge-red',
+    completed:'badge-blue', enrolled:'badge-green', dropped:'badge-red'
+  };
+  return `<span class="badge ${map[s]||'badge-grey'}">${s||'—'}</span>`;
+}
+
+// =====================
+//   DASHBOARD
+// =====================
+async function loadDashboard() {
+  try {
+    const [students, teachers, activities, rooms, bookings] = await Promise.all([
+      apiCall('/api/students'), apiCall('/api/teachers'),
+      apiCall('/api/activities'), apiCall('/api/rooms'), apiCall('/api/bookings')
+    ]);
+
+    const stats = [
+      { icon:'👨‍🎓', label:'Students', value: students.length, color:'#e3f2fd', iconBg:'#bbdefb' },
+      { icon:'👩‍🏫', label:'Teachers', value: teachers.length, color:'#e8f5e9', iconBg:'#c8e6c9' },
+      { icon:'📚', label:'Activities', value: activities.length, color:'#fff3e0', iconBg:'#ffe0b2' },
+      { icon:'🏛️', label:'Rooms', value: rooms.length, color:'#f3e5f5', iconBg:'#e1bee7' },
+      { icon:'📅', label:'Bookings', value: bookings.length, color:'#e8eaf6', iconBg:'#c5cae9' },
+      { icon:'✅', label:'Active Students', value: students.filter(s=>s.status==='active').length, color:'#e8f5e9', iconBg:'#a5d6a7' },
+    ];
+
+    document.getElementById('stats-grid').innerHTML = stats.map(s => `
+      <div class="stat-card">
+        <div class="stat-icon" style="background:${s.iconBg}">${s.icon}</div>
+        <div class="stat-info">
+          <div class="stat-value">${s.value}</div>
+          <div class="stat-label">${s.label}</div>
+        </div>
+      </div>`).join('');
+
+    const recent = bookings.slice(0,5);
+    if (recent.length === 0) {
+      document.getElementById('recent-bookings-table').innerHTML = '<div class="empty-state"><div class="icon">📅</div><p>No bookings yet</p></div>';
+    } else {
+      document.getElementById('recent-bookings-table').innerHTML = `
+        <table>
+          <thead><tr><th>Title</th><th>Room</th><th>Start</th><th>End</th><th>Status</th></tr></thead>
+          <tbody>${recent.map(b=>`
+            <tr>
+              <td>${esc(b.title)}</td>
+              <td>Room #${b.room_id}</td>
+              <td>${fmtDateTime(b.start_time)}</td>
+              <td>${fmtDateTime(b.end_time)}</td>
+              <td>${statusBadge(b.status)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`;
     }
+  } catch(err) {
+    document.getElementById('stats-grid').innerHTML = `<div class="alert alert-error">${esc(err.message)}</div>`;
+  }
+}
 
-    async function checkApiStatus() {
-      const statusEl = document.getElementById('apiStatus');
-      try {
-        const resp = await fetch(API_URL + '/health');
-        if (resp.ok) {
-          statusEl.innerHTML = '<div class="dot"></div><span>API Gateway is online</span>';
-          statusEl.style.background = '#e8f5e9';
-          statusEl.style.color = '#2e7d32';
-        } else {
-          throw new Error('API returned non-OK status');
-        }
-      } catch {
-        statusEl.innerHTML = '<div class="dot" style="background:#f44336"></div><span>API Gateway offline — start with docker-compose up</span>';
-        statusEl.style.background = '#ffebee';
-        statusEl.style.color = '#c62828';
-      }
-    }
+// =====================
+//   STUDENTS
+// =====================
+async function loadStudents() {
+  document.getElementById('students-table').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const data = await apiCall('/api/students');
+    tableData.students = data;
+    renderStudents(data);
+  } catch(err) {
+    document.getElementById('students-table').innerHTML = `<div class="alert alert-error" style="margin:1rem">${esc(err.message)}</div>`;
+  }
+}
 
-    checkApiStatus();
-  </script>
+function renderStudents(data) {
+  if (!data.length) {
+    document.getElementById('students-table').innerHTML = '<div class="empty-state"><div class="icon">👨‍🎓</div><p>No students yet. Add your first student!</p></div>';
+    return;
+  }
+  document.getElementById('students-table').innerHTML = `
+    <table>
+      <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Enrolled</th><th>Actions</th></tr></thead>
+      <tbody>${data.map(s=>`
+        <tr>
+          <td><strong>${esc(s.first_name)} ${esc(s.last_name)}</strong></td>
+          <td>${esc(s.email)}</td>
+          <td>${esc(s.phone||'—')}</td>
+          <td>${statusBadge(s.status)}</td>
+          <td>${fmtDate(s.enrollment_date)}</td>
+          <td><div class="actions">
+            <button class="btn btn-ghost btn-sm" onclick='openStudentModal(${JSON.stringify(s)})'>✏️ Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteStudent(${s.id})">🗑️</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function openStudentModal(s) {
+  const edit = !!s;
+  openModal(`
+    <div class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>${edit ? 'Edit Student' : 'Add Student'}</h3>
+          <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="modal-error" class="alert alert-error" style="display:none"></div>
+          <div class="form-row">
+            <div class="form-group"><label>First Name *</label><input id="m-fname" value="${esc(s?.first_name||'')}" required></div>
+            <div class="form-group"><label>Last Name *</label><input id="m-lname" value="${esc(s?.last_name||'')}" required></div>
+          </div>
+          <div class="form-group"><label>Email *</label><input id="m-email" type="email" value="${esc(s?.email||'')}" required></div>
+          <div class="form-row">
+            <div class="form-group"><label>Phone</label><input id="m-phone" value="${esc(s?.phone||'')}"></div>
+            <div class="form-group"><label>Date of Birth</label><input id="m-dob" type="date" value="${s?.date_of_birth?s.date_of_birth.substring(0,10):''}"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Enrollment Date</label><input id="m-enroll" type="date" value="${s?.enrollment_date?s.enrollment_date.substring(0,10):''}"></div>
+            <div class="form-group"><label>Status</label>
+              <select id="m-status">
+                <option value="active" ${s?.status==='active'?'selected':''}>Active</option>
+                <option value="inactive" ${s?.status==='inactive'?'selected':''}>Inactive</option>
+                <option value="graduated" ${s?.status==='graduated'?'selected':''}>Graduated</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group"><label>Address</label><textarea id="m-address" rows="2">${esc(s?.address||'')}</textarea></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveStudent(${s?.id||'null'})">${edit?'Save Changes':'Add Student'}</button>
+        </div>
+      </div>
+    </div>`);
+}
+
+async function saveStudent(id) {
+  const body = {
+    first_name: document.getElementById('m-fname').value.trim(),
+    last_name: document.getElementById('m-lname').value.trim(),
+    email: document.getElementById('m-email').value.trim(),
+    phone: document.getElementById('m-phone').value.trim(),
+    date_of_birth: document.getElementById('m-dob').value || null,
+    enrollment_date: document.getElementById('m-enroll').value || null,
+    status: document.getElementById('m-status').value,
+    address: document.getElementById('m-address').value.trim(),
+  };
+  if (!body.first_name || !body.last_name || !body.email) {
+    document.getElementById('modal-error').textContent = 'First name, last name, and email are required.';
+    document.getElementById('modal-error').style.display = '';
+    return;
+  }
+  try {
+    if (id) await apiCall('/api/students/' + id, 'PUT', body);
+    else await apiCall('/api/students', 'POST', body);
+    closeModal();
+    showToast(id ? 'Student updated' : 'Student added');
+    loadStudents();
+  } catch(err) {
+    document.getElementById('modal-error').textContent = err.message;
+    document.getElementById('modal-error').style.display = '';
+  }
+}
+
+async function deleteStudent(id) {
+  if (!confirm('Delete this student?')) return;
+  try {
+    await apiCall('/api/students/' + id, 'DELETE');
+    showToast('Student deleted', 'info');
+    loadStudents();
+  } catch(err) { showToast(err.message, 'error'); }
+}
+
+// =====================
+//   TEACHERS
+// =====================
+async function loadTeachers() {
+  document.getElementById('teachers-table').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const data = await apiCall('/api/teachers');
+    tableData.teachers = data;
+    renderTeachers(data);
+  } catch(err) {
+    document.getElementById('teachers-table').innerHTML = `<div class="alert alert-error" style="margin:1rem">${esc(err.message)}</div>`;
+  }
+}
+
+function renderTeachers(data) {
+  if (!data.length) {
+    document.getElementById('teachers-table').innerHTML = '<div class="empty-state"><div class="icon">👩‍🏫</div><p>No teachers yet. Add your first teacher!</p></div>';
+    return;
+  }
+  document.getElementById('teachers-table').innerHTML = `
+    <table>
+      <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Specialization</th><th>Hired</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>${data.map(t=>`
+        <tr>
+          <td><strong>${esc(t.first_name)} ${esc(t.last_name)}</strong></td>
+          <td>${esc(t.email)}</td>
+          <td>${esc(t.phone||'—')}</td>
+          <td>${esc(t.specialization||'—')}</td>
+          <td>${fmtDate(t.hire_date)}</td>
+          <td>${statusBadge(t.status)}</td>
+          <td><div class="actions">
+            <button class="btn btn-ghost btn-sm" onclick='openTeacherModal(${JSON.stringify(t)})'>✏️ Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteTeacher(${t.id})">🗑️</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function openTeacherModal(t) {
+  const edit = !!t;
+  openModal(`
+    <div class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>${edit ? 'Edit Teacher' : 'Add Teacher'}</h3>
+          <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="modal-error" class="alert alert-error" style="display:none"></div>
+          <div class="form-row">
+            <div class="form-group"><label>First Name *</label><input id="m-fname" value="${esc(t?.first_name||'')}" required></div>
+            <div class="form-group"><label>Last Name *</label><input id="m-lname" value="${esc(t?.last_name||'')}" required></div>
+          </div>
+          <div class="form-group"><label>Email *</label><input id="m-email" type="email" value="${esc(t?.email||'')}" required></div>
+          <div class="form-row">
+            <div class="form-group"><label>Phone</label><input id="m-phone" value="${esc(t?.phone||'')}"></div>
+            <div class="form-group"><label>Hire Date</label><input id="m-hire" type="date" value="${t?.hire_date?t.hire_date.substring(0,10):''}"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Specialization</label><input id="m-spec" value="${esc(t?.specialization||'')}"></div>
+            <div class="form-group"><label>Status</label>
+              <select id="m-status">
+                <option value="active" ${t?.status==='active'?'selected':''}>Active</option>
+                <option value="inactive" ${t?.status==='inactive'?'selected':''}>Inactive</option>
+                <option value="on_leave" ${t?.status==='on_leave'?'selected':''}>On Leave</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveTeacher(${t?.id||'null'})">${edit?'Save Changes':'Add Teacher'}</button>
+        </div>
+      </div>
+    </div>`);
+}
+
+async function saveTeacher(id) {
+  const body = {
+    first_name: document.getElementById('m-fname').value.trim(),
+    last_name: document.getElementById('m-lname').value.trim(),
+    email: document.getElementById('m-email').value.trim(),
+    phone: document.getElementById('m-phone').value.trim(),
+    hire_date: document.getElementById('m-hire').value || null,
+    specialization: document.getElementById('m-spec').value.trim(),
+    status: document.getElementById('m-status').value,
+  };
+  if (!body.first_name || !body.last_name || !body.email) {
+    document.getElementById('modal-error').textContent = 'First name, last name, and email are required.';
+    document.getElementById('modal-error').style.display = '';
+    return;
+  }
+  try {
+    if (id) await apiCall('/api/teachers/' + id, 'PUT', body);
+    else await apiCall('/api/teachers', 'POST', body);
+    closeModal();
+    showToast(id ? 'Teacher updated' : 'Teacher added');
+    loadTeachers();
+  } catch(err) {
+    document.getElementById('modal-error').textContent = err.message;
+    document.getElementById('modal-error').style.display = '';
+  }
+}
+
+async function deleteTeacher(id) {
+  if (!confirm('Delete this teacher?')) return;
+  try {
+    await apiCall('/api/teachers/' + id, 'DELETE');
+    showToast('Teacher deleted', 'info');
+    loadTeachers();
+  } catch(err) { showToast(err.message, 'error'); }
+}
+
+// =====================
+//   ACTIVITIES
+// =====================
+async function loadActivities() {
+  document.getElementById('activities-table').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const data = await apiCall('/api/activities');
+    tableData.activities = data;
+    renderActivities(data);
+  } catch(err) {
+    document.getElementById('activities-table').innerHTML = `<div class="alert alert-error" style="margin:1rem">${esc(err.message)}</div>`;
+  }
+}
+
+function renderActivities(data) {
+  if (!data.length) {
+    document.getElementById('activities-table').innerHTML = '<div class="empty-state"><div class="icon">📚</div><p>No activities yet. Add your first activity!</p></div>';
+    return;
+  }
+  document.getElementById('activities-table').innerHTML = `
+    <table>
+      <thead><tr><th>Name</th><th>Schedule</th><th>Capacity</th><th>Status</th><th>Start</th><th>End</th><th>Actions</th></tr></thead>
+      <tbody>${data.map(a=>`
+        <tr>
+          <td><strong>${esc(a.name)}</strong><br><small style="color:#888">${esc(a.description||'')}</small></td>
+          <td>${esc(a.schedule||'—')}</td>
+          <td>${a.capacity}</td>
+          <td>${statusBadge(a.status)}</td>
+          <td>${fmtDate(a.start_date)}</td>
+          <td>${fmtDate(a.end_date)}</td>
+          <td><div class="actions">
+            <button class="btn btn-ghost btn-sm" onclick='openActivityModal(${JSON.stringify(a)})'>✏️ Edit</button>
+            <button class="btn btn-ghost btn-sm" onclick="openEnrollModal(${a.id})">👥 Enroll</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteActivity(${a.id})">🗑️</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function openActivityModal(a) {
+  const edit = !!a;
+  let teacherOpts = '', roomOpts = '';
+  try {
+    const [teachers, rooms] = await Promise.all([apiCall('/api/teachers'), apiCall('/api/rooms')]);
+    teacherOpts = '<option value="">— None —</option>' + teachers.map(t => `<option value="${t.id}" ${a?.teacher_id==t.id?'selected':''}>${esc(t.first_name+' '+t.last_name)}</option>`).join('');
+    roomOpts = '<option value="">— None —</option>' + rooms.map(r => `<option value="${r.id}" ${a?.room_id==r.id?'selected':''}>${esc(r.name)}</option>`).join('');
+  } catch(e) { teacherOpts = roomOpts = '<option>Failed to load</option>'; }
+
+  openModal(`
+    <div class="modal-overlay">
+      <div class="modal modal-lg">
+        <div class="modal-header">
+          <h3>${edit ? 'Edit Activity' : 'Add Activity'}</h3>
+          <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="modal-error" class="alert alert-error" style="display:none"></div>
+          <div class="form-group"><label>Activity Name *</label><input id="m-name" value="${esc(a?.name||'')}" required></div>
+          <div class="form-group"><label>Description</label><textarea id="m-desc" rows="2">${esc(a?.description||'')}</textarea></div>
+          <div class="form-row">
+            <div class="form-group"><label>Teacher</label><select id="m-teacher">${teacherOpts}</select></div>
+            <div class="form-group"><label>Room</label><select id="m-room">${roomOpts}</select></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Capacity *</label><input id="m-cap" type="number" min="1" value="${a?.capacity||''}"></div>
+            <div class="form-group"><label>Schedule</label><input id="m-schedule" value="${esc(a?.schedule||'')}" placeholder="e.g. Mon/Wed 9-11am"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Start Date</label><input id="m-start" type="date" value="${a?.start_date?a.start_date.substring(0,10):''}"></div>
+            <div class="form-group"><label>End Date</label><input id="m-end" type="date" value="${a?.end_date?a.end_date.substring(0,10):''}"></div>
+          </div>
+          <div class="form-group"><label>Status</label>
+            <select id="m-status">
+              <option value="active" ${a?.status==='active'?'selected':''}>Active</option>
+              <option value="completed" ${a?.status==='completed'?'selected':''}>Completed</option>
+              <option value="cancelled" ${a?.status==='cancelled'?'selected':''}>Cancelled</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveActivity(${a?.id||'null'})">${edit?'Save Changes':'Add Activity'}</button>
+        </div>
+      </div>
+    </div>`);
+}
+
+async function saveActivity(id) {
+  const body = {
+    name: document.getElementById('m-name').value.trim(),
+    description: document.getElementById('m-desc').value.trim(),
+    teacher_id: document.getElementById('m-teacher').value || null,
+    room_id: document.getElementById('m-room').value || null,
+    capacity: parseInt(document.getElementById('m-cap').value) || null,
+    schedule: document.getElementById('m-schedule').value.trim(),
+    start_date: document.getElementById('m-start').value || null,
+    end_date: document.getElementById('m-end').value || null,
+    status: document.getElementById('m-status').value,
+  };
+  if (!body.name || !body.capacity) {
+    document.getElementById('modal-error').textContent = 'Name and capacity are required.';
+    document.getElementById('modal-error').style.display = '';
+    return;
+  }
+  try {
+    if (id) await apiCall('/api/activities/' + id, 'PUT', body);
+    else await apiCall('/api/activities', 'POST', body);
+    closeModal();
+    showToast(id ? 'Activity updated' : 'Activity added');
+    loadActivities();
+  } catch(err) {
+    document.getElementById('modal-error').textContent = err.message;
+    document.getElementById('modal-error').style.display = '';
+  }
+}
+
+async function openEnrollModal(activityId) {
+  let participantRows = '', studentOpts = '';
+  try {
+    const [participants, students] = await Promise.all([
+      apiCall('/api/activities/' + activityId + '/participants'),
+      apiCall('/api/students')
+    ]);
+    const enrolledIds = new Set(participants.map(p => p.id));
+    const available = students.filter(s => !enrolledIds.has(s.id) && s.status === 'active');
+
+    participantRows = participants.length ? participants.map(p => `
+      <tr>
+        <td>${esc(p.first_name+' '+p.last_name)}</td>
+        <td>${esc(p.email)}</td>
+        <td>${statusBadge(p.enrollment_status)}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="unenroll(${activityId},${p.id})">Remove</button></td>
+      </tr>`).join('') : '<tr><td colspan="4" class="empty-state" style="text-align:center;padding:1rem">No enrollments yet</td></tr>';
+
+    studentOpts = available.map(s => `<option value="${s.id}">${esc(s.first_name+' '+s.last_name)} (${esc(s.email)})</option>`).join('') ||
+      '<option value="" disabled>No available students</option>';
+  } catch(e) { participantRows = '<tr><td colspan="4">Error loading data</td></tr>'; }
+
+  openModal(`
+    <div class="modal-overlay">
+      <div class="modal modal-lg">
+        <div class="modal-header">
+          <h3>Manage Enrollments — Activity #${activityId}</h3>
+          <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="display:flex;gap:.75rem;margin-bottom:1rem;align-items:flex-end">
+            <div class="form-group" style="flex:1;margin:0">
+              <label>Enroll Student</label>
+              <select id="enroll-student">${studentOpts}</select>
+            </div>
+            <button class="btn btn-accent" onclick="enrollStudent(${activityId})">Enroll</button>
+          </div>
+          <div id="enroll-error" class="alert alert-error" style="display:none"></div>
+          <table>
+            <thead><tr><th>Student</th><th>Email</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="enroll-list">${participantRows}</tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal()">Close</button>
+        </div>
+      </div>
+    </div>`);
+}
+
+async function enrollStudent(activityId) {
+  const studentId = document.getElementById('enroll-student').value;
+  if (!studentId) return;
+  try {
+    await apiCall('/api/activities/' + activityId + '/enroll', 'POST', { student_id: parseInt(studentId) });
+    showToast('Student enrolled');
+    closeModal();
+    openEnrollModal(activityId);
+  } catch(err) {
+    document.getElementById('enroll-error').textContent = err.message;
+    document.getElementById('enroll-error').style.display = '';
+  }
+}
+
+async function unenroll(activityId, studentId) {
+  if (!confirm('Remove this student from the activity?')) return;
+  try {
+    await apiCall('/api/activities/' + activityId + '/enroll/' + studentId, 'DELETE');
+    showToast('Student removed', 'info');
+    closeModal();
+    openEnrollModal(activityId);
+  } catch(err) { showToast(err.message, 'error'); }
+}
+
+async function deleteActivity(id) {
+  if (!confirm('Delete this activity?')) return;
+  try {
+    await apiCall('/api/activities/' + id, 'DELETE');
+    showToast('Activity deleted', 'info');
+    loadActivities();
+  } catch(err) { showToast(err.message, 'error'); }
+}
+
+// =====================
+//   ROOMS
+// =====================
+async function loadRooms() {
+  document.getElementById('rooms-table').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const data = await apiCall('/api/rooms');
+    tableData.rooms = data;
+    renderRooms(data);
+  } catch(err) {
+    document.getElementById('rooms-table').innerHTML = `<div class="alert alert-error" style="margin:1rem">${esc(err.message)}</div>`;
+  }
+}
+
+function renderRooms(data) {
+  if (!data.length) {
+    document.getElementById('rooms-table').innerHTML = '<div class="empty-state"><div class="icon">🏛️</div><p>No rooms yet. Add your first room!</p></div>';
+    return;
+  }
+  document.getElementById('rooms-table').innerHTML = `
+    <table>
+      <thead><tr><th>Name</th><th>Type</th><th>Capacity</th><th>Location</th><th>Equipment</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>${data.map(r=>`
+        <tr>
+          <td><strong>${esc(r.name)}</strong></td>
+          <td>${esc(r.room_type||'—')}</td>
+          <td>${r.capacity}</td>
+          <td>${esc(r.location||'—')}</td>
+          <td><small>${esc(r.equipment||'—')}</small></td>
+          <td>${statusBadge(r.status)}</td>
+          <td><div class="actions">
+            <button class="btn btn-ghost btn-sm" onclick='openRoomModal(${JSON.stringify(r)})'>✏️ Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteRoom(${r.id})">🗑️</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function openRoomModal(r) {
+  const edit = !!r;
+  openModal(`
+    <div class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>${edit ? 'Edit Room' : 'Add Room'}</h3>
+          <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="modal-error" class="alert alert-error" style="display:none"></div>
+          <div class="form-row">
+            <div class="form-group"><label>Room Name *</label><input id="m-name" value="${esc(r?.name||'')}" required></div>
+            <div class="form-group"><label>Capacity *</label><input id="m-cap" type="number" min="1" value="${r?.capacity||''}"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Type</label>
+              <select id="m-type">
+                <option value="classroom" ${r?.room_type==='classroom'?'selected':''}>Classroom</option>
+                <option value="lab" ${r?.room_type==='lab'?'selected':''}>Lab</option>
+                <option value="auditorium" ${r?.room_type==='auditorium'?'selected':''}>Auditorium</option>
+                <option value="gym" ${r?.room_type==='gym'?'selected':''}>Gym</option>
+                <option value="library" ${r?.room_type==='library'?'selected':''}>Library</option>
+                <option value="other" ${r?.room_type==='other'?'selected':''}>Other</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Status</label>
+              <select id="m-status">
+                <option value="available" ${r?.status==='available'?'selected':''}>Available</option>
+                <option value="maintenance" ${r?.status==='maintenance'?'selected':''}>Maintenance</option>
+                <option value="unavailable" ${r?.status==='unavailable'?'selected':''}>Unavailable</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group"><label>Location</label><input id="m-loc" value="${esc(r?.location||'')}"></div>
+          <div class="form-group"><label>Equipment</label><textarea id="m-equip" rows="2">${esc(r?.equipment||'')}</textarea></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveRoom(${r?.id||'null'})">${edit?'Save Changes':'Add Room'}</button>
+        </div>
+      </div>
+    </div>`);
+}
+
+async function saveRoom(id) {
+  const body = {
+    name: document.getElementById('m-name').value.trim(),
+    capacity: parseInt(document.getElementById('m-cap').value) || null,
+    room_type: document.getElementById('m-type').value,
+    status: document.getElementById('m-status').value,
+    location: document.getElementById('m-loc').value.trim(),
+    equipment: document.getElementById('m-equip').value.trim(),
+  };
+  if (!body.name || !body.capacity) {
+    document.getElementById('modal-error').textContent = 'Name and capacity are required.';
+    document.getElementById('modal-error').style.display = '';
+    return;
+  }
+  try {
+    if (id) await apiCall('/api/rooms/' + id, 'PUT', body);
+    else await apiCall('/api/rooms', 'POST', body);
+    closeModal();
+    showToast(id ? 'Room updated' : 'Room added');
+    loadRooms();
+  } catch(err) {
+    document.getElementById('modal-error').textContent = err.message;
+    document.getElementById('modal-error').style.display = '';
+  }
+}
+
+async function deleteRoom(id) {
+  if (!confirm('Delete this room?')) return;
+  try {
+    await apiCall('/api/rooms/' + id, 'DELETE');
+    showToast('Room deleted', 'info');
+    loadRooms();
+  } catch(err) { showToast(err.message, 'error'); }
+}
+
+// =====================
+//   BOOKINGS
+// =====================
+async function loadBookings() {
+  document.getElementById('bookings-table').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const data = await apiCall('/api/bookings');
+    tableData.bookings = data;
+    renderBookings(data);
+  } catch(err) {
+    document.getElementById('bookings-table').innerHTML = `<div class="alert alert-error" style="margin:1rem">${esc(err.message)}</div>`;
+  }
+}
+
+function renderBookings(data) {
+  if (!data.length) {
+    document.getElementById('bookings-table').innerHTML = '<div class="empty-state"><div class="icon">📅</div><p>No bookings yet. Add your first booking!</p></div>';
+    return;
+  }
+  document.getElementById('bookings-table').innerHTML = `
+    <table>
+      <thead><tr><th>Title</th><th>Room</th><th>Start</th><th>End</th><th>Status</th><th>Created By</th><th>Actions</th></tr></thead>
+      <tbody>${data.map(b=>`
+        <tr>
+          <td><strong>${esc(b.title)}</strong>${b.description?`<br><small style="color:#888">${esc(b.description)}</small>`:''}</td>
+          <td>Room #${b.room_id}</td>
+          <td>${fmtDateTime(b.start_time)}</td>
+          <td>${fmtDateTime(b.end_time)}</td>
+          <td>${statusBadge(b.status)}</td>
+          <td>${esc(b.created_by||'—')}</td>
+          <td><div class="actions">
+            <button class="btn btn-ghost btn-sm" onclick='openBookingModal(${JSON.stringify(b)})'>✏️ Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteBooking(${b.id})">🗑️</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function openBookingModal(b) {
+  const edit = !!b;
+  let roomOpts = '', activityOpts = '';
+  try {
+    const [rooms, activities] = await Promise.all([apiCall('/api/rooms'), apiCall('/api/activities')]);
+    roomOpts = rooms.map(r => `<option value="${r.id}" ${b?.room_id==r.id?'selected':''}>${esc(r.name)}</option>`).join('');
+    activityOpts = '<option value="">— None —</option>' + activities.map(a => `<option value="${a.id}" ${b?.activity_id==a.id?'selected':''}>${esc(a.name)}</option>`).join('');
+  } catch(e) { roomOpts = activityOpts = '<option>Error</option>'; }
+
+  const fmtLocalDT = dt => dt ? new Date(new Date(dt) - new Date().getTimezoneOffset()*60000).toISOString().slice(0,16) : '';
+
+  openModal(`
+    <div class="modal-overlay">
+      <div class="modal modal-lg">
+        <div class="modal-header">
+          <h3>${edit ? 'Edit Booking' : 'Add Booking'}</h3>
+          <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="modal-error" class="alert alert-error" style="display:none"></div>
+          <div class="form-group"><label>Title *</label><input id="m-title" value="${esc(b?.title||'')}" required></div>
+          <div class="form-group"><label>Description</label><textarea id="m-desc" rows="2">${esc(b?.description||'')}</textarea></div>
+          <div class="form-row">
+            <div class="form-group"><label>Room *</label><select id="m-room">${roomOpts}</select></div>
+            <div class="form-group"><label>Activity</label><select id="m-activity">${activityOpts}</select></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Start Time *</label><input id="m-start" type="datetime-local" value="${fmtLocalDT(b?.start_time)}"></div>
+            <div class="form-group"><label>End Time *</label><input id="m-end" type="datetime-local" value="${fmtLocalDT(b?.end_time)}"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Status</label>
+              <select id="m-status">
+                <option value="pending" ${b?.status==='pending'?'selected':''}>Pending</option>
+                <option value="confirmed" ${b?.status==='confirmed'?'selected':''}>Confirmed</option>
+                <option value="cancelled" ${b?.status==='cancelled'?'selected':''}>Cancelled</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Created By</label><input id="m-createdby" value="${esc(b?.created_by||currentUser?.username||'')}"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveBooking(${b?.id||'null'})">${edit?'Save Changes':'Add Booking'}</button>
+        </div>
+      </div>
+    </div>`);
+}
+
+async function saveBooking(id) {
+  const body = {
+    title: document.getElementById('m-title').value.trim(),
+    description: document.getElementById('m-desc').value.trim(),
+    room_id: parseInt(document.getElementById('m-room').value),
+    activity_id: document.getElementById('m-activity').value ? parseInt(document.getElementById('m-activity').value) : null,
+    start_time: document.getElementById('m-start').value,
+    end_time: document.getElementById('m-end').value,
+    status: document.getElementById('m-status').value,
+    created_by: document.getElementById('m-createdby').value.trim(),
+  };
+  if (!body.title || !body.room_id || !body.start_time || !body.end_time) {
+    document.getElementById('modal-error').textContent = 'Title, room, start time, and end time are required.';
+    document.getElementById('modal-error').style.display = '';
+    return;
+  }
+  if (new Date(body.end_time) <= new Date(body.start_time)) {
+    document.getElementById('modal-error').textContent = 'End time must be after start time.';
+    document.getElementById('modal-error').style.display = '';
+    return;
+  }
+  try {
+    if (id) await apiCall('/api/bookings/' + id, 'PUT', body);
+    else await apiCall('/api/bookings', 'POST', body);
+    closeModal();
+    showToast(id ? 'Booking updated' : 'Booking created');
+    loadBookings();
+  } catch(err) {
+    document.getElementById('modal-error').textContent = err.message;
+    document.getElementById('modal-error').style.display = '';
+  }
+}
+
+async function deleteBooking(id) {
+  if (!confirm('Delete this booking?')) return;
+  try {
+    await apiCall('/api/bookings/' + id, 'DELETE');
+    showToast('Booking deleted', 'info');
+    loadBookings();
+  } catch(err) { showToast(err.message, 'error'); }
+}
+
+// ===== UTIL =====
+function esc(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+</script>
 </body>
 </html>

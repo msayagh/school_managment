@@ -15,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        service: [students, teachers, activities, rooms, bookings, api-gateway]
+        service: [students, teachers, activities, rooms, bookings, api-gateway, ui]
 
     steps:
     - uses: actions/checkout@v4
@@ -26,6 +26,7 @@ jobs:
         node-version: '18'
 
     - name: Install shared dependencies
+      if: matrix.service != 'ui'
       run: |
         cd shared
         npm install

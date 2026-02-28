@@ -20,9 +20,12 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`UI service running on port ${PORT}`);
-  console.log(`API Gateway: ${API_GATEWAY_URL}`);
-});
+// Only start listening if not in test mode
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`UI service running on port ${PORT}`);
+    console.log(`API Gateway: ${API_GATEWAY_URL}`);
+  });
+}
 
 module.exports = app;
