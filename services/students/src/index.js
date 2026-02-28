@@ -62,9 +62,22 @@ app.post('/api/students', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'First name, last name, and email are required' });
     }
 
+    const normalizedPhone = phone ?? null;
+    const normalizedAddress = address ?? null;
+    const normalizedDateOfBirth = date_of_birth ?? null;
+
     const result = await database.query(
       'INSERT INTO students (first_name, last_name, email, phone, address, date_of_birth, enrollment_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [first_name, last_name, email, phone, address, date_of_birth, enrollment_date || new Date(), status || 'active']
+      [
+        first_name,
+        last_name,
+        email,
+        normalizedPhone,
+        normalizedAddress,
+        normalizedDateOfBirth,
+        enrollment_date || new Date(),
+        status || 'active'
+      ]
     );
     
     const newStudent = await database.query('SELECT * FROM students WHERE id = ?', [result.insertId]);
@@ -170,6 +183,34 @@ app.get('/api/students/:id/activities', optionalAuthMiddleware, async (req, res)
     logger.error('Failed to get student activities', { error: error.message });
     res.status(500).json({ error: 'Failed to retrieve activities' });
   }
+});
+
+// Body parsing error handler
+app.use((err, req, res, next) => {
+  if (!err) {
+    return next();
+  }
+
+  if (err.type === 'request.aborted') {
+    logger.warn('Request body read aborted by client', {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip
+    });
+    return res.status(400).json({ error: 'Request was aborted before body was fully received' });
+  }
+
+  if (err.type === 'entity.parse.failed' || err.type === 'encoding.unsupported') {
+    logger.warn('Invalid request body', {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip,
+      type: err.type
+    });
+    return res.status(400).json({ error: 'Invalid request body' });
+  }
+
+  return next(err);
 });
 
 // Initialize database and start server

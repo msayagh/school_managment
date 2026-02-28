@@ -95,6 +95,26 @@ describe('Students Service', () => {
       expect(response.body).toHaveProperty('error');
     });
 
+    it('should create a new student when optional fields are omitted', async () => {
+      const newStudent = {
+        first_name: 'Sara',
+        last_name: 'Connor',
+        email: 'sara@example.com'
+      };
+
+      database.query
+        .mockResolvedValueOnce({ insertId: 2 })
+        .mockResolvedValueOnce([{ id: 2, ...newStudent, phone: null, address: null, date_of_birth: null }]);
+
+      const response = await request(app)
+        .post('/api/students')
+        .set('Authorization', 'Bearer valid-token')
+        .send(newStudent);
+
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty('id', 2);
+    });
+
     it('should return 401 without authorization', async () => {
       const response = await request(app)
         .post('/api/students')

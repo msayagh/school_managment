@@ -156,9 +156,22 @@ app.post('/api/bookings', authMiddleware, async (req, res) => {
       });
     }
 
+    const normalizedActivityId = activity_id ?? null;
+    const normalizedDescription = description ?? null;
+    const normalizedCreatedBy = created_by ?? null;
+
     const result = await database.query(
       'INSERT INTO bookings (room_id, activity_id, title, description, start_time, end_time, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [room_id, activity_id, title, description, start_time, end_time, status || 'pending', created_by]
+      [
+        room_id,
+        normalizedActivityId,
+        title,
+        normalizedDescription,
+        start_time,
+        end_time,
+        status || 'pending',
+        normalizedCreatedBy
+      ]
     );
     
     const newBooking = await database.query('SELECT * FROM bookings WHERE id = ?', [result.insertId]);
@@ -262,6 +275,34 @@ app.delete('/api/bookings/:id', authMiddleware, async (req, res) => {
     logger.error('Failed to delete booking', { error: error.message });
     res.status(500).json({ error: 'Failed to delete booking' });
   }
+});
+
+// Body parsing error handler
+app.use((err, req, res, next) => {
+  if (!err) {
+    return next();
+  }
+
+  if (err.type === 'request.aborted') {
+    logger.warn('Request body read aborted by client', {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip
+    });
+    return res.status(400).json({ error: 'Request was aborted before body was fully received' });
+  }
+
+  if (err.type === 'entity.parse.failed' || err.type === 'encoding.unsupported') {
+    logger.warn('Invalid request body', {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip,
+      type: err.type
+    });
+    return res.status(400).json({ error: 'Invalid request body' });
+  }
+
+  return next(err);
 });
 
 // Initialize database and start server

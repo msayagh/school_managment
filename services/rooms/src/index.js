@@ -170,9 +170,12 @@ app.post('/api/rooms', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Name and capacity are required' });
     }
 
+    const normalizedLocation = location ?? null;
+    const normalizedEquipment = equipment ?? null;
+
     const result = await database.query(
       'INSERT INTO rooms (name, capacity, room_type, location, equipment, status) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, capacity, room_type || 'classroom', location, equipment, status || 'available']
+      [name, capacity, room_type || 'classroom', normalizedLocation, normalizedEquipment, status || 'available']
     );
     
     const newRoom = await database.query('SELECT * FROM rooms WHERE id = ?', [result.insertId]);
@@ -243,6 +246,34 @@ app.delete('/api/rooms/:id', authMiddleware, async (req, res) => {
     logger.error('Failed to delete room', { error: error.message });
     res.status(500).json({ error: 'Failed to delete room' });
   }
+});
+
+// Body parsing error handler
+app.use((err, req, res, next) => {
+  if (!err) {
+    return next();
+  }
+
+  if (err.type === 'request.aborted') {
+    logger.warn('Request body read aborted by client', {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip
+    });
+    return res.status(400).json({ error: 'Request was aborted before body was fully received' });
+  }
+
+  if (err.type === 'entity.parse.failed' || err.type === 'encoding.unsupported') {
+    logger.warn('Invalid request body', {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip,
+      type: err.type
+    });
+    return res.status(400).json({ error: 'Invalid request body' });
+  }
+
+  return next(err);
 });
 
 // Initialize database and start server

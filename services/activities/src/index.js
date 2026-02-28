@@ -62,9 +62,26 @@ app.post('/api/activities', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Name and capacity are required' });
     }
 
+    const normalizedDescription = description ?? null;
+    const normalizedTeacherId = teacher_id ?? null;
+    const normalizedRoomId = room_id ?? null;
+    const normalizedStartDate = start_date ?? null;
+    const normalizedEndDate = end_date ?? null;
+    const normalizedSchedule = schedule ?? null;
+
     const result = await database.query(
       'INSERT INTO activities (name, description, teacher_id, room_id, capacity, start_date, end_date, schedule, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [name, description, teacher_id, room_id, capacity, start_date, end_date, schedule, status || 'active']
+      [
+        name,
+        normalizedDescription,
+        normalizedTeacherId,
+        normalizedRoomId,
+        capacity,
+        normalizedStartDate,
+        normalizedEndDate,
+        normalizedSchedule,
+        status || 'active'
+      ]
     );
     
     const newActivity = await database.query('SELECT * FROM activities WHERE id = ?', [result.insertId]);
@@ -275,6 +292,34 @@ app.put('/api/activities/:id/teacher', authMiddleware, async (req, res) => {
     logger.error('Failed to assign teacher', { error: error.message });
     res.status(500).json({ error: 'Failed to assign teacher' });
   }
+});
+
+// Body parsing error handler
+app.use((err, req, res, next) => {
+  if (!err) {
+    return next();
+  }
+
+  if (err.type === 'request.aborted') {
+    logger.warn('Request body read aborted by client', {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip
+    });
+    return res.status(400).json({ error: 'Request was aborted before body was fully received' });
+  }
+
+  if (err.type === 'entity.parse.failed' || err.type === 'encoding.unsupported') {
+    logger.warn('Invalid request body', {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip,
+      type: err.type
+    });
+    return res.status(400).json({ error: 'Invalid request body' });
+  }
+
+  return next(err);
 });
 
 // Initialize database and start server

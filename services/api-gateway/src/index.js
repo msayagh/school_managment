@@ -17,8 +17,9 @@ const PORT = process.env.API_GATEWAY_PORT || 8000;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
 app.use(requestLogger);
+
+const jsonBodyParser = express.json();
 
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -60,7 +61,7 @@ app.get('/health', (req, res) => {
 });
 
 // Authentication endpoints
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', jsonBodyParser, async (req, res) => {
   try {
     const { username, email, password, role } = req.body;
     
@@ -97,7 +98,7 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', jsonBodyParser, async (req, res) => {
   try {
     const { username, password } = req.body;
     
@@ -203,6 +204,34 @@ app.use('/api/bookings', createProxyMiddleware({
   target: BOOKINGS_SERVICE_URL,
   ...proxyOptions
 }));
+
+// Body parsing error handler
+app.use((err, req, res, next) => {
+  if (!err) {
+    return next();
+  }
+
+  if (err.type === 'request.aborted') {
+    logger.warn('Request body read aborted by client', {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip
+    });
+    return res.status(400).json({ error: 'Request was aborted before body was fully received' });
+  }
+
+  if (err.type === 'entity.parse.failed' || err.type === 'encoding.unsupported') {
+    logger.warn('Invalid request body', {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip,
+      type: err.type
+    });
+    return res.status(400).json({ error: 'Invalid request body' });
+  }
+
+  return next(err);
+});
 
 // 404 handler
 app.use((req, res) => {
