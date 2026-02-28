@@ -78,7 +78,13 @@ school_managment/
    docker-compose up -d
    ```
 
-4. **Access the application**
+   or
+   
+   ```bash
+   docker compose up -d
+   ```
+
+5. **Access the application**
    - UI: http://localhost:3000
    - API Gateway: http://localhost:8000
    - Individual services: Ports 3001-3005
