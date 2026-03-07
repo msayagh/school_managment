@@ -6,8 +6,12 @@
 -- Password: admin123 (bcrypt hash below)
 -- IMPORTANT: Change this password in production!
 INSERT INTO users (username, email, password_hash, role, status) VALUES
-('admin', 'admin@school.com', '$2b$10$rKJ3YLZi6vQ7LZnqQ8tNZeCq9p5W7YvhqhPxGZmKX3PZJ5YqYQn7K', 'admin', 'active')
-ON DUPLICATE KEY UPDATE username=username;
+('admin', 'admin@school.com', '$2b$10$Qt2JsvvuPvRao3LCzb2cNeAjaUs2V.uVIk38giK48MP7E2uF2MaIK', 'admin', 'active')
+ON DUPLICATE KEY UPDATE
+    password_hash=VALUES(password_hash),
+    role=VALUES(role),
+    status=VALUES(status),
+    updated_at=CURRENT_TIMESTAMP;
 
 -- Link existing teachers to user accounts
 -- Password for all: teacher123
