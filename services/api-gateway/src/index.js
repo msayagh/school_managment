@@ -47,12 +47,15 @@ app.get('/', (req, res) => {
         createUser: 'POST /api/auth/users (admin only)'
       },
       services: {
-        students: '/api/students',
-        teachers: '/api/teachers',
-        activities: '/api/activities',
-        rooms: '/api/rooms',
-        bookings: '/api/bookings',
-        enrollments: '/api/enrollments'
+        students:    '/api/students',
+        teachers:    '/api/teachers',
+        activities:  '/api/activities',
+        rooms:       '/api/rooms',
+        sites:       '/api/sites',
+        bookings:    '/api/bookings',
+        enrollments: '/api/enrollments',
+        programs:    '/api/programs',
+        evaluations: '/api/evaluations'
       }
     },
     ui: 'http://localhost:3000'
@@ -65,12 +68,14 @@ app.get('/health', (req, res) => {
 });
 
 // Service URLs
-const STUDENTS_SERVICE_URL = process.env.STUDENTS_SERVICE_URL || 'http://students-service:3001';
-const TEACHERS_SERVICE_URL = process.env.TEACHERS_SERVICE_URL || 'http://teachers-service:3002';
+const STUDENTS_SERVICE_URL   = process.env.STUDENTS_SERVICE_URL   || 'http://students-service:3001';
+const TEACHERS_SERVICE_URL   = process.env.TEACHERS_SERVICE_URL   || 'http://teachers-service:3002';
 const ACTIVITIES_SERVICE_URL = process.env.ACTIVITIES_SERVICE_URL || 'http://activities-service:3003';
-const ROOMS_SERVICE_URL = process.env.ROOMS_SERVICE_URL || 'http://rooms-service:3004';
-const BOOKINGS_SERVICE_URL = process.env.BOOKINGS_SERVICE_URL || 'http://bookings-service:3005';
-const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://auth-service:3007';
+const ROOMS_SERVICE_URL      = process.env.ROOMS_SERVICE_URL      || 'http://rooms-service:3004';
+const BOOKINGS_SERVICE_URL   = process.env.BOOKINGS_SERVICE_URL   || 'http://bookings-service:3005';
+const PROGRAMS_SERVICE_URL   = process.env.PROGRAMS_SERVICE_URL   || 'http://programs-service:3006';
+const AUTH_SERVICE_URL       = process.env.AUTH_SERVICE_URL       || 'http://auth-service:3007';
+const EVALUATIONS_SERVICE_URL = process.env.EVALUATIONS_SERVICE_URL || 'http://evaluations-service:3008';
 
 // Proxy configuration
 const proxyOptions = {
@@ -118,6 +123,31 @@ app.use('/api/bookings', createProxyMiddleware({
 // Enrollments endpoint via activities service
 app.use('/api/enrollments', createProxyMiddleware({
   target: ACTIVITIES_SERVICE_URL,
+  ...proxyOptions
+}));
+
+// Programs service
+app.use('/api/programs', createProxyMiddleware({
+  target: PROGRAMS_SERVICE_URL,
+  ...proxyOptions
+}));
+
+// Sites live in the rooms service
+app.use('/api/sites', createProxyMiddleware({
+  target: ROOMS_SERVICE_URL,
+  pathRewrite: { '^/api/sites': '/api/rooms/sites' },
+  ...proxyOptions
+}));
+
+// Evaluations service
+app.use('/api/evaluations', createProxyMiddleware({
+  target: EVALUATIONS_SERVICE_URL,
+  ...proxyOptions
+}));
+
+// Parent routes (handled by students service)
+app.use('/api/parents', createProxyMiddleware({
+  target: STUDENTS_SERVICE_URL,
   ...proxyOptions
 }));
 
@@ -169,12 +199,13 @@ async function startServer() {
     app.listen(PORT, () => {
       logger.info(`API Gateway running on port ${PORT}`);
       logger.info('Service routes configured:', {
-        auth: AUTH_SERVICE_URL,
-        students: STUDENTS_SERVICE_URL,
-        teachers: TEACHERS_SERVICE_URL,
-        activities: ACTIVITIES_SERVICE_URL,
-        rooms: ROOMS_SERVICE_URL,
-        bookings: BOOKINGS_SERVICE_URL
+        students:    STUDENTS_SERVICE_URL,
+        teachers:    TEACHERS_SERVICE_URL,
+        activities:  ACTIVITIES_SERVICE_URL,
+        rooms:       ROOMS_SERVICE_URL,
+        bookings:    BOOKINGS_SERVICE_URL,
+        programs:    PROGRAMS_SERVICE_URL,
+        evaluations: EVALUATIONS_SERVICE_URL
       });
     });
   } catch (error) {

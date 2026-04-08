@@ -215,6 +215,27 @@ app.get('/users', async (req, res) => {
   }
 });
 
+// Admin: Reset user password
+app.put('/users/:id/password', async (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  const { newPassword } = req.body;
+  const { id } = req.params;
+  if (!token) return res.status(401).json({ error: 'No token provided' });
+  if (!newPassword || newPassword.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    const result = await dbQuery('UPDATE users SET password_hash=?, updated_at=CURRENT_TIMESTAMP WHERE id=?', [passwordHash, id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' });
+    logger.info(`Password reset by admin for user id: ${id}`);
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    logger.error('Reset password error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Check username availability
 app.get('/check-username/:username', async (req, res) => {
   const { username } = req.params;
@@ -311,6 +332,42 @@ app.post('/register/student', async (req, res) => {
 
   } catch (error) {
     logger.error('Student registration error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Parent self-registration
+app.post('/register/parent', async (req, res) => {
+  const { firstName, lastName, email, phone, address, password, username } = req.body;
+  if (!firstName || !lastName || !email || !password) {
+    return res.status(400).json({ error: 'First name, last name, email, and password are required' });
+  }
+  if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  try {
+    const existing = await dbQuery('SELECT id FROM users WHERE email = ?', [email]);
+    if (existing.length > 0) return res.status(409).json({ error: 'Email already registered' });
+
+    const parentResult = await dbQuery(
+      'INSERT INTO parents (first_name, last_name, email, phone, address) VALUES (?, ?, ?, ?, ?)',
+      [firstName, lastName, email, phone || null, address || null]
+    );
+    const parentId = parentResult.insertId;
+    const generatedUsername = username || `${firstName.toLowerCase()}.${lastName.toLowerCase()}${parentId}`;
+    const passwordHash = await bcrypt.hash(password, 10);
+    await dbQuery(
+      'INSERT INTO users (username, email, password_hash, role, related_id, status) VALUES (?, ?, ?, "parent", ?, "active")',
+      [generatedUsername, email, passwordHash, parentId]
+    );
+    logger.info(`Parent self-registered: ${email}`);
+    const token = jwt.sign({ userId: parentId, username: generatedUsername, role: 'parent', relatedId: parentId }, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+    res.status(201).json({
+      message: 'Registration successful', token,
+      user: { id: parentId, username: generatedUsername, email, role: 'parent',
+        parent: { id: parentId, first_name: firstName, last_name: lastName, email, phone, address }
+      }
+    });
+  } catch (error) {
+    logger.error('Parent registration error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

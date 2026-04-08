@@ -182,6 +182,62 @@ app.get('/api/students/:id/activities', optionalAuthMiddleware, async (req, res)
   }
 });
 
+// Parent: get children (requires parent JWT)
+app.get('/api/parents/children', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const parentId = req.user?.relatedId || req.user?.related_id;
+    if (!parentId) return res.status(401).json({ error: 'Parent account required' });
+    const children = await database.query(
+      `SELECT s.*, pc.relationship FROM students s
+       JOIN parent_children pc ON pc.student_id = s.id
+       WHERE pc.parent_id = ? ORDER BY s.first_name`,
+      [parentId]
+    );
+    res.json(children);
+  } catch (error) {
+    logger.error('Failed to get parent children', { error: error.message });
+    res.status(500).json({ error: 'Failed to retrieve children' });
+  }
+});
+
+// Parent: link a child by student email or id
+app.post('/api/parents/children', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const parentId = req.user?.relatedId || req.user?.related_id;
+    if (!parentId) return res.status(401).json({ error: 'Parent account required' });
+    const { student_email, student_id, relationship } = req.body;
+    let sid = student_id;
+    if (!sid && student_email) {
+      const rows = await database.query('SELECT id FROM students WHERE email = ?', [student_email]);
+      if (rows.length === 0) return res.status(404).json({ error: 'No student found with that email' });
+      sid = rows[0].id;
+    }
+    if (!sid) return res.status(400).json({ error: 'student_id or student_email is required' });
+    await database.query(
+      'INSERT IGNORE INTO parent_children (parent_id, student_id, relationship) VALUES (?, ?, ?)',
+      [parentId, sid, relationship || 'parent']
+    );
+    const student = await database.query('SELECT * FROM students WHERE id = ?', [sid]);
+    res.json(student[0]);
+  } catch (error) {
+    logger.error('Failed to link child', { error: error.message });
+    res.status(500).json({ error: 'Failed to link child' });
+  }
+});
+
+// Parent: unlink a child
+app.delete('/api/parents/children/:studentId', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const parentId = req.user?.relatedId || req.user?.related_id;
+    if (!parentId) return res.status(401).json({ error: 'Parent account required' });
+    await database.query('DELETE FROM parent_children WHERE parent_id = ? AND student_id = ?', [parentId, req.params.studentId]);
+    res.json({ message: 'Child unlinked' });
+  } catch (error) {
+    logger.error('Failed to unlink child', { error: error.message });
+    res.status(500).json({ error: 'Failed to unlink child' });
+  }
+});
+
 // Body parsing error handler
 app.use((err, req, res, next) => {
   if (!err) {

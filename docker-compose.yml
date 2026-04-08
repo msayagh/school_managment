@@ -72,7 +72,9 @@ services:
       - ACTIVITIES_SERVICE_URL=http://activities-service:3003
       - ROOMS_SERVICE_URL=http://rooms-service:3004
       - BOOKINGS_SERVICE_URL=http://bookings-service:3005
+      - PROGRAMS_SERVICE_URL=http://programs-service:3006
       - AUTH_SERVICE_URL=http://auth-service:3007
+      - EVALUATIONS_SERVICE_URL=http://evaluations-service:3008
     depends_on:
       database:
         condition: service_healthy
@@ -87,6 +89,10 @@ services:
       bookings-service:
         condition: service_started
       auth-service:
+        condition: service_started
+      programs-service:
+        condition: service_started
+      evaluations-service:
         condition: service_started
     networks:
       - school-network
@@ -199,6 +205,52 @@ services:
       - DB_PASSWORD=${MYSQL_PASSWORD:-changeme}
       - DB_NAME=school_management
       - SERVICE_PORT=3005
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-insecure}
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - school-network
+
+  # Programs Microservice
+  programs-service:
+    build:
+      context: .
+      dockerfile: services/programs/Dockerfile
+    container_name: school-programs-service
+    ports:
+      - "3006:3006"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_USER=school_admin
+      - DB_PASSWORD=${MYSQL_PASSWORD:-changeme}
+      - DB_NAME=school_management
+      - SERVICE_PORT=3006
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-insecure}
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - school-network
+
+  # Evaluations Microservice
+  evaluations-service:
+    build:
+      context: .
+      dockerfile: services/evaluations/Dockerfile
+    container_name: school-evaluations-service
+    ports:
+      - "3008:3008"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_USER=school_admin
+      - DB_PASSWORD=${MYSQL_PASSWORD:-changeme}
+      - DB_NAME=school_management
+      - SERVICE_PORT=3008
       - JWT_SECRET=${JWT_SECRET:-dev-secret-insecure}
     depends_on:
       database:

@@ -81,6 +81,12 @@ CREATE TABLE IF NOT EXISTS bookings (
     id INT AUTO_INCREMENT PRIMARY KEY,
     room_id INT NOT NULL,
     activity_id INT,
+    program_id INT,
+    schedule_id INT,
+    occurrence_date DATE,
+    source_booking_id INT,
+    scope ENUM('GENERAL', 'PROGRAM_DEFAULT', 'ACTIVITY_OVERRIDE') NOT NULL DEFAULT 'GENERAL',
+    priority INT NOT NULL DEFAULT 1,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     start_time DATETIME NOT NULL,
@@ -90,7 +96,8 @@ CREATE TABLE IF NOT EXISTS bookings (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
-    FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE SET NULL
+    FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE,
+    FOREIGN KEY (source_booking_id) REFERENCES bookings(id) ON DELETE SET NULL
 );
 
 -- Users Table (for authentication)
@@ -118,5 +125,8 @@ CREATE INDEX idx_enrollments_student ON activity_enrollments(student_id);
 CREATE INDEX idx_enrollments_activity ON activity_enrollments(activity_id);
 CREATE INDEX idx_bookings_room ON bookings(room_id);
 CREATE INDEX idx_bookings_time ON bookings(start_time, end_time);
+CREATE INDEX idx_bookings_scope ON bookings(scope);
+CREATE INDEX idx_bookings_program ON bookings(program_id);
+CREATE INDEX idx_bookings_activity_scope_date ON bookings(activity_id, scope, occurrence_date);
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_email ON users(email);
